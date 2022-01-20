@@ -2,7 +2,6 @@ package com.cooper.wordle.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-/*
 val Green = Color(0xFF6AAA64)
 val DarkGreen = Color(0xFF538D4E)
 val Yellow = Color(0xFFC9B458)
@@ -15,26 +14,27 @@ val Black = Color(0xFF212121)
 val Orange = Color(0xFFF5793A)
 val Blue = Color(0xFF85C0F9)
 
-val ColorTone1 = Color(0xFFFFFFFF)
-val ColorTone2 = Color(0xFFF6F7F8)
-val ColorTone3 = Color(0xFFEDEFF1)
-val ColorTone4 = Color(0xFFD3D6DA)
-val ColorTone5 = Color(0xFF878A8C)
-val ColorTone6 = Color(0xFF787C7E)
-val ColorTone7 = Color(0xFF1A1A1B)
+val ColorTone1 = Color(0xFFD7DADC)
+val ColorTone2 = Color(0xFF818384)
+val ColorTone3 = Color(0xFF565758)
+val ColorTone4 = Color(0xFF3A3A3C)
+val ColorTone5 = Color(0xFF272729)
+val ColorTone6 = Color(0xFF1A1A1B)
+val ColorTone7 = Color(0xFF121213)
 val Opacity50 = Color(0x80000000)
 
 val Present = DarkenedYellow
 val Correct = DarkGreen
 val Absent = ColorTone4
 val TileText = ColorTone1
+
 val KeyText = ColorTone1
 val KeyEvaluatedText = ColorTone1
 val KeyBackground = ColorTone2
 val KeyBackgroundPresent = Present
 val KeyBackgroundCorrect = Correct
 val KeyBackgroundAbsent = Absent
-val ContentBackground = ColorTone7*/
+val ContentBackground = ColorTone7
 
 val md_theme_light_primary = Color(0xFF006874)
 val md_theme_light_onPrimary = Color(0xFFffffff)
