@@ -1,7 +1,6 @@
 package com.cooper.wordle.app.ui.components
 
 import android.content.res.Configuration
-import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -13,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,13 +23,12 @@ fun LetterTile(
     tileState: TileState,
     modifier: Modifier = Modifier
 ) {
-    val landscape = LocalConfiguration.current.orientation == ORIENTATION_LANDSCAPE
     BoxWithConstraints(
         contentAlignment = Alignment.Center,
         modifier = modifier
             .fillMaxSize()
             .background(tileState.tileBackground)
-            .aspectRatio(1f, landscape)
+            .aspectRatio(1f)
             .border(2.dp, tileState.tileBorder)
     ) {
         if (tileState.char != null) {

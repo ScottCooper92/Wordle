@@ -11,7 +11,7 @@ object Libs {
     const val store = "com.dropbox.mobile.store:store4:4.0.4-KT15"
 
     object Accompanist {
-        const val version = "0.22.0-rc"
+        const val version = "0.24.0-alpha"
         const val insets = "com.google.accompanist:accompanist-insets:$version"
         const val insetsUi = "com.google.accompanist:accompanist-insets-ui:$version"
         const val pager = "com.google.accompanist:accompanist-pager:$version"
@@ -80,8 +80,9 @@ object Libs {
         }
 
         object Constraint {
+            const val constraintLayout = "androidx.constraintlayout:constraintlayout:2.1.3"
             const val constraintLayoutCompose =
-                "androidx.constraintlayout:constraintlayout-compose:1.0.0-rc01"
+                "androidx.constraintlayout:constraintlayout-compose:1.0.0"
         }
 
         object Compose {

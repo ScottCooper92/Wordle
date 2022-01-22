@@ -52,6 +52,8 @@ android {
 
 dependencies {
 
+    implementation Libs.AndroidX.Constraint.constraintLayout
+
     implementation Libs.Kotlin.stdlib
     implementation Libs.Coroutines.android
 
