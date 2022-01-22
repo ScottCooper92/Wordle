@@ -19,6 +19,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.cooper.wordle.app.R
+import com.cooper.wordle.app.ui.components.Key
 import com.cooper.wordle.app.ui.components.Keyboard
 import com.cooper.wordle.app.ui.components.WordGrid
 import com.cooper.wordle.app.ui.theme.WordleTheme
@@ -29,7 +30,9 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    HomeScreen(state)
+    HomeScreen(state, onKeyClicked = { key ->
+        viewModel.onKeyClicked(key)
+    })
 }
 
 @OptIn(
@@ -39,7 +42,7 @@ fun HomeScreen(
     ExperimentalPagerApi::class
 )
 @Composable
-private fun HomeScreen(state: HomeViewState) {
+private fun HomeScreen(state: HomeViewState, onKeyClicked: (key: Key) -> Unit) {
     Scaffold(
         topBar = {
             HomeAppBar()
@@ -81,12 +84,15 @@ private fun HomeScreen(state: HomeViewState) {
             )
 
             Keyboard(
-                onKeyClicked = {
-
-                },
+                onKeyClicked = onKeyClicked,
                 modifier = Modifier
                     .constrainAs(keyboard) {
-                        linkTo(start = guidelineStart, end = guidelineEnd, startMargin = 24.dp, endMargin = 24.dp)
+                        linkTo(
+                            start = guidelineStart,
+                            end = guidelineEnd,
+                            startMargin = 24.dp,
+                            endMargin = 24.dp
+                        )
                         linkTo(top = grid.bottom, bottom = guidelineBottom, bias = 1f)
 
                         width = Dimension.matchParent
@@ -113,7 +119,7 @@ private fun HomeAppBar() {
 @Composable
 fun PreviewHomeScreen() {
     val first = WordState(
-        true, listOf(
+        listOf(
             TileState.Absent('P'),
             TileState.Present('A'),
             TileState.Present('R'),
@@ -123,7 +129,7 @@ fun PreviewHomeScreen() {
     )
 
     val second = WordState(
-        false, listOf(
+        listOf(
             TileState.Foo('P'),
             TileState.Foo('A'),
             TileState.Empty,
@@ -132,7 +138,7 @@ fun PreviewHomeScreen() {
         )
     )
     val third = WordState(
-        false, listOf(
+         listOf(
             TileState.Empty,
             TileState.Empty,
             TileState.Empty,
@@ -141,8 +147,12 @@ fun PreviewHomeScreen() {
         )
     )
 
-    val state = HomeViewState(wordStates = listOf(first, second, third, third, third))
+    val state = HomeViewState(
+        completeWords = listOf(first),
+        currentWord = second,
+        remainingGuesses = listOf(third, third, third, third)
+    )
     WordleTheme {
-        HomeScreen(state)
+        HomeScreen(state) {}
     }
 }

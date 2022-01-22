@@ -28,10 +28,7 @@ fun WordRow(wordState: WordState, modifier: Modifier = Modifier) {
 @Composable
 fun PreviewEmptyWordRow() {
     val tileState = TileState.Empty
-    val wordState = WordState(
-        false,
-        listOf(tileState, tileState, tileState, tileState, tileState)
-    )
+    val wordState = WordState(listOf(tileState, tileState, tileState, tileState, tileState))
     WordRow(wordState, Modifier.height(100.dp))
 }
 
@@ -39,7 +36,6 @@ fun PreviewEmptyWordRow() {
 @Composable
 fun PreviewPartialWordRow() {
     val wordState = WordState(
-        false,
         listOf(
             TileState.Foo('P'),
             TileState.Foo('A'),
@@ -55,7 +51,6 @@ fun PreviewPartialWordRow() {
 @Composable
 fun PreviewFullWordRow() {
     val wordState = WordState(
-        false,
         listOf(
             TileState.Foo('P'),
             TileState.Foo('A'),
@@ -71,7 +66,6 @@ fun PreviewFullWordRow() {
 @Composable
 fun PreviewAbsentWordRow() {
     val wordState = WordState(
-        false,
         listOf(
             TileState.Absent('P'),
             TileState.Absent('A'),
@@ -87,7 +81,6 @@ fun PreviewAbsentWordRow() {
 @Composable
 fun PreviewPartiallyPresentWordRow() {
     val wordState = WordState(
-        false,
         listOf(
             TileState.Absent('P'),
             TileState.Present('A'),
@@ -103,7 +96,6 @@ fun PreviewPartiallyPresentWordRow() {
 @Composable
 fun PreviewPartiallyCorrectWordRow() {
     val wordState = WordState(
-        false,
         listOf(
             TileState.Absent('P'),
             TileState.Present('A'),
@@ -119,7 +111,6 @@ fun PreviewPartiallyCorrectWordRow() {
 @Composable
 fun PreviewCorrectWordRow() {
     val wordState = WordState(
-        false,
         listOf(
             TileState.Correct('P'),
             TileState.Correct('A'),
@@ -136,7 +127,6 @@ fun PreviewCorrectWordRow() {
 private fun PreviewRowSize() {
     val tileState = TileState.Empty
     val wordState = WordState(
-        false,
         listOf(tileState, tileState, tileState, tileState, tileState)
     )
     Column(

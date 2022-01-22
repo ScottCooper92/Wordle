@@ -1,5 +1,6 @@
 package com.cooper.wordle.app.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -18,10 +19,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.cooper.wordle.app.ui.theme.KeyBackground
 
-private sealed class Key(val aspectRatio: Float) {
-    data class IconKey(val icon: ImageVector) : Key(65f / 58)
-    data class CharKey(val char: Char) : Key(65f / 58)
-    data class StringKey(val string: String) : Key(65f / 58)
+sealed class Key(val aspectRatio: Float = 65f / 58) {
+    data class IconKey(val icon: ImageVector) : Key()
+
+    sealed class TextKey(val text: String) : Key()
+    data class CharKey(val char: Char) : TextKey(char.toString())
+    data class StringKey(val string: String) : TextKey(string)
 }
 
 private val firstRow = listOf(
@@ -63,7 +66,7 @@ private val thirdRow = listOf(
 
 @Composable
 fun Keyboard(
-    onKeyClicked: (key: Char) -> Unit,
+    onKeyClicked: (key: Key) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -74,24 +77,24 @@ fun Keyboard(
             .fillMaxWidth()
     ) {
         val rowModifier = Modifier.weight(1f)
-        KeyboardRow(keys = firstRow, rowModifier)
-        KeyboardRow(keys = secondRow, rowModifier)
-        KeyboardRow(keys = thirdRow, rowModifier)
+        KeyboardRow(keys = firstRow, onKeyClicked, rowModifier)
+        KeyboardRow(keys = secondRow, onKeyClicked, rowModifier)
+        KeyboardRow(keys = thirdRow, onKeyClicked, rowModifier)
     }
 }
 
 @Composable
 private fun KeyboardRow(
     keys: List<Key>,
+    onKeyClicked: (key: Key) -> Unit,
     modifier: Modifier = Modifier,
-    keyModifier: Modifier = Modifier,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
         modifier = modifier.fillMaxWidth()
     ) {
         keys.forEach { key ->
-            Key(key, Modifier.weight(1f))
+            Key(key, onKeyClicked, Modifier.weight(1f))
         }
     }
 }
@@ -99,61 +102,75 @@ private fun KeyboardRow(
 @Composable
 private fun Key(
     key: Key,
+    onKeyClicked: (key: Key) -> Unit,
     modifier: Modifier = Modifier
 ) {
     when (key) {
-        is Key.CharKey -> CharKey(key, modifier)
-        is Key.IconKey -> IconKey(key, modifier)
-        is Key.StringKey -> StringKey(key, modifier)
+        is Key.CharKey -> CharKey(key, onKeyClicked, modifier)
+        is Key.IconKey -> IconKey(key, onKeyClicked, modifier)
+        is Key.StringKey -> StringKey(key, onKeyClicked, modifier)
     }
 }
 
 @Composable
 private fun CharKey(
     key: Key.CharKey,
+    onKeyClicked: (key: Key) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    TextKey(text = key.char.toString(), modifier.aspectRatio(key.aspectRatio, true))
+    TextKey(key, onKeyClicked, modifier.aspectRatio(key.aspectRatio, true))
 }
 
 @Composable
 private fun StringKey(
     key: Key.StringKey,
+    onKeyClicked: (key: Key) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    TextKey(text = key.string, modifier.aspectRatio(key.aspectRatio, true))
+    TextKey(key, onKeyClicked, modifier.aspectRatio(key.aspectRatio, true))
 }
 
 @Composable
 private fun IconKey(
     key: Key.IconKey,
+    onKeyClicked: (key: Key) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    BaseKey(modifier.aspectRatio(key.aspectRatio,true)) {
+    BaseKey(key, onKeyClicked, modifier.aspectRatio(key.aspectRatio, true)) {
         Icon(key.icon, "", tint = Color.White, modifier = Modifier.padding(16.dp))
     }
 }
 
 @Composable
-private fun BaseKey(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+private fun BaseKey(
+    key: Key,
+    onKeyClicked: (key: Key) -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
     Surface(
         color = KeyBackground,
         shape = RoundedCornerShape(8.dp),
-        modifier = modifier,
+        modifier = modifier.clickable { onKeyClicked(key) },
         content = content
     )
 }
 
 @Composable
-private fun TextKey(text: String, modifier: Modifier = Modifier, scaleFactor: Float = .8f) {
-    BaseKey(modifier) {
+private fun TextKey(
+    key: Key.TextKey,
+    onKeyClicked: (key: Key) -> Unit,
+    modifier: Modifier = Modifier,
+    scaleFactor: Float = .8f
+) {
+    BaseKey(key, onKeyClicked, modifier) {
         BoxWithConstraints(contentAlignment = Alignment.Center, modifier = Modifier.padding(8.dp)) {
             val fontSize = with(LocalDensity.current) {
                 val dimension = if (maxHeight > maxWidth) maxWidth else maxHeight
                 dimension.toSp() * scaleFactor
             }
             Text(
-                text = text,
+                text = key.text,
                 color = Color.White,
                 fontSize = fontSize,
                 maxLines = 1,
@@ -167,19 +184,22 @@ private fun TextKey(text: String, modifier: Modifier = Modifier, scaleFactor: Fl
 @Preview
 @Composable
 private fun PreviewCharKey() {
-    Key(key = Key.CharKey('A'), modifier = Modifier.height(58.dp))
+    Key(key = Key.CharKey('A'), modifier = Modifier.height(58.dp), onKeyClicked = { })
 }
 
 @Preview
 @Composable
 private fun PreviewStringKey() {
-    Key(key = Key.StringKey("ENTER"), modifier = Modifier.height(58.dp))
+    Key(key = Key.StringKey("ENTER"), modifier = Modifier.height(58.dp), onKeyClicked = { })
 }
 
 @Preview
 @Composable
 private fun PreviewIconKey() {
-    Key(key = Key.IconKey(Icons.Default.KeyboardBackspace), modifier = Modifier.height(58.dp))
+    Key(
+        key = Key.IconKey(Icons.Default.KeyboardBackspace),
+        modifier = Modifier.height(58.dp),
+        onKeyClicked = { })
 }
 
 @Preview
