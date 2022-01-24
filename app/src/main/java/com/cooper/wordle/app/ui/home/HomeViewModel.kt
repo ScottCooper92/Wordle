@@ -1,56 +1,15 @@
 package com.cooper.wordle.app.ui.home
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cooper.wordle.app.ui.components.Key
-import com.cooper.wordle.app.ui.theme.ColorTone3
-import com.cooper.wordle.app.ui.theme.ColorTone4
-import com.cooper.wordle.app.ui.theme.DarkGreen
-import com.cooper.wordle.app.ui.theme.DarkenedYellow
+import com.cooper.wordle.app.ui.home.GuessChecker.checkGuess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
-
-sealed interface TileState {
-    val char: Char?
-    val tileBackground: Color
-    val tileBorder: Color
-
-    object Empty : TileState {
-        override val char: Char? = null
-        override val tileBackground = Color.Transparent
-        override val tileBorder = ColorTone4
-    }
-
-    data class Foo(override val char: Char) : TileState {
-        override val tileBackground = Color.Transparent
-        override val tileBorder = ColorTone3
-    }
-
-    data class Absent(override val char: Char) : TileState {
-        override val tileBackground = ColorTone4
-        override val tileBorder: Color = tileBackground
-    }
-
-    data class Present(override val char: Char) : TileState {
-        override val tileBackground = DarkenedYellow
-        override val tileBorder: Color = tileBackground
-    }
-
-    data class Correct(override val char: Char) : TileState {
-        override val tileBackground = DarkGreen
-        override val tileBorder: Color = tileBackground
-    }
-}
-
-data class WordState(val tileStates: List<TileState>) {
-    val letterCount: Int
-        get() = tileStates.count { it !is TileState.Empty }
-}
 
 @Immutable
 data class HomeViewState(
@@ -68,7 +27,6 @@ data class HomeViewState(
             }
         }
 
-
     companion object {
         internal fun initialState(maxGuesses: Int, wordSize: Int): HomeViewState {
             val emptyWord = List(wordSize) { TileState.Empty }
@@ -83,11 +41,11 @@ data class HomeViewState(
 
 class HomeViewModel @Inject constructor() : ViewModel() {
 
-    private val word = "party"
+    private val tempAnswer = "happy"
     private val maxGuesses = 6
     private val wordSize = 5
 
-    val _state = MutableStateFlow(HomeViewState.initialState(maxGuesses, wordSize))
+    private val _state = MutableStateFlow(HomeViewState.initialState(maxGuesses, wordSize))
     val state: StateFlow<HomeViewState> = _state
 
     fun onKeyClicked(key: Key) {
@@ -129,16 +87,25 @@ class HomeViewModel @Inject constructor() : ViewModel() {
             val currentWord =
                 currentState.currentWord ?: throw IllegalStateException("Current word is null")
 
+            // check if the word is complete
             if (currentWord.letterCount != wordSize) {
                 Timber.d("Word isn't complete")
                 //TODO - Should we show a prompt to the user?
                 return@launch
             }
 
+            //TODO - check if it's in the dictionary
+
+            // check it against the actual word
+            val completeWord = checkGuess(currentWord, tempAnswer)
+
             // mark the current word as complete
             val completeWords = currentState.completeWords.toMutableList().apply {
-                add(currentWord)
+                add(completeWord)
             }
+
+            // if the complete word is fully correct the the game is over
+            //TODO - Handle game over
 
             val remainingGuesses = currentState.remainingGuesses.toMutableList()
 
