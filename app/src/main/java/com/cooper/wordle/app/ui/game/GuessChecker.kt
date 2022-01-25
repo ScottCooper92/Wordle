@@ -1,4 +1,4 @@
-package com.cooper.wordle.app.ui.home
+package com.cooper.wordle.app.ui.game
 
 import timber.log.Timber
 

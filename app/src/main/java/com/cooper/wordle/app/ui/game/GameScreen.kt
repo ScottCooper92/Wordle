@@ -1,13 +1,12 @@
-package com.cooper.wordle.app.ui.home
+package com.cooper.wordle.app.ui.game
 
 import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.QuestionAnswer
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,15 +23,19 @@ import com.cooper.wordle.app.ui.components.Keyboard
 import com.cooper.wordle.app.ui.components.WordGrid
 import com.cooper.wordle.app.ui.theme.WordleTheme
 import com.google.accompanist.pager.ExperimentalPagerApi
+import timber.log.Timber
 
 @Composable
-fun HomeScreen(
-    viewModel: HomeViewModel = hiltViewModel()
+fun GameScreen(
+    viewModel: GameViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    HomeScreen(state, onKeyClicked = { key ->
-        viewModel.onKeyClicked(key)
-    })
+    Timber.d("$state")
+    GameScreen(state,
+        onActionClicked = { },
+        onKeyClicked = { key ->
+            viewModel.onKeyClicked(key)
+        })
 }
 
 @OptIn(
@@ -42,10 +45,14 @@ fun HomeScreen(
     ExperimentalPagerApi::class
 )
 @Composable
-private fun HomeScreen(state: HomeViewState, onKeyClicked: (key: Key) -> Unit) {
+private fun GameScreen(
+    state: GameViewState,
+    onActionClicked: () -> Unit,
+    onKeyClicked: (key: Key) -> Unit
+) {
     Scaffold(
         topBar = {
-            HomeAppBar()
+            HomeAppBar(onActionClicked)
         }
     ) {
         ConstraintLayout(modifier = Modifier.fillMaxSize()) {
@@ -61,7 +68,7 @@ private fun HomeScreen(state: HomeViewState, onKeyClicked: (key: Key) -> Unit) {
             val keyboardBarrier = createTopBarrier(keyboard)
 
             WordGrid(
-                wordLength = 5,
+                wordLength = state.wordLength,
                 wordStates = state.wordStates,
                 modifier = Modifier
                     .constrainAs(grid) {
@@ -104,11 +111,16 @@ private fun HomeScreen(state: HomeViewState, onKeyClicked: (key: Key) -> Unit) {
 }
 
 @Composable
-private fun HomeAppBar() {
+private fun HomeAppBar(onActionClicked: () -> Unit) {
     CenterAlignedTopAppBar(
         title = {
             Text(text = stringResource(id = R.string.wordle).uppercase())
         },
+        actions = {
+            IconButton(onClick = { onActionClicked() }) {
+                Icon(Icons.Default.QuestionAnswer, "")
+            }
+        }
     )
 }
 
@@ -117,7 +129,7 @@ private fun HomeAppBar() {
 @Preview(name = "portrait medium", heightDp = 800, widthDp = 450)
 @Preview(name = "dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun PreviewHomeScreen() {
+fun PreviewGameScreen() {
     val first = WordState(
         listOf(
             TileState.Absent('P'),
@@ -138,7 +150,7 @@ fun PreviewHomeScreen() {
         )
     )
     val third = WordState(
-         listOf(
+        listOf(
             TileState.Empty,
             TileState.Empty,
             TileState.Empty,
@@ -147,12 +159,13 @@ fun PreviewHomeScreen() {
         )
     )
 
-    val state = HomeViewState(
+    val state = GameViewState(
+        answer = "Answer",
         completeWords = listOf(first),
         currentWord = second,
         remainingGuesses = listOf(third, third, third, third)
     )
     WordleTheme {
-        HomeScreen(state) {}
+        GameScreen(state, {}) {}
     }
 }

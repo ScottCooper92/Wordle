@@ -1,22 +1,29 @@
-package com.cooper.wordle.app.ui.home
+package com.cooper.wordle.app.ui.game
 
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cooper.wordle.app.data.WordStore
+import com.cooper.wordle.app.interactor.WordInteractor
 import com.cooper.wordle.app.ui.components.Key
-import com.cooper.wordle.app.ui.home.GuessChecker.checkGuess
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import com.cooper.wordle.app.ui.game.GuessChecker.checkGuess
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
 @Immutable
-data class HomeViewState(
-    internal val completeWords: List<WordState>,
-    internal val currentWord: WordState?,
-    internal val remainingGuesses: List<WordState>,
+data class GameViewState(
+    val answer: String,
+    val maxGuesses: Int = 6,
+    val completeWords: List<WordState> = emptyList(),
+    val currentWord: WordState? = WordState.emptyWord(answer.length),
+    val remainingGuesses: List<WordState> = List(maxGuesses - 1) { WordState.emptyWord(answer.length) }
 ) {
+    val wordLength: Int
+        get() = answer.length
 
     val wordStates: List<WordState>
         get() {
@@ -26,27 +33,40 @@ data class HomeViewState(
                 addAll(remainingGuesses)
             }
         }
-
-    companion object {
-        internal fun initialState(maxGuesses: Int, wordSize: Int): HomeViewState {
-            val emptyWord = List(wordSize) { TileState.Empty }
-            return HomeViewState(
-                completeWords = emptyList(),
-                currentWord = WordState(emptyWord),
-                remainingGuesses = List(maxGuesses - 1) { WordState(emptyWord) }
-            )
-        }
-    }
 }
 
-class HomeViewModel @Inject constructor() : ViewModel() {
+@HiltViewModel
+class GameViewModel @Inject constructor(
+    wordInteractor: WordInteractor,
+    savedStateHandle: SavedStateHandle,
+) : ViewModel() {
 
-    private val tempAnswer = "happy"
     private val maxGuesses = 6
-    private val wordSize = 5
+    private val initialWord = savedStateHandle.get<String>("word") ?: "happy"
+    private val wordLength =
+        savedStateHandle.get<WordStore.Letters>("letters") ?: WordStore.Letters.FIVE
 
-    private val _state = MutableStateFlow(HomeViewState.initialState(maxGuesses, wordSize))
-    val state: StateFlow<HomeViewState> = _state
+    private val initialState: Flow<GameViewState> = wordInteractor.flow.map { answer ->
+        GameViewState(answer, maxGuesses)
+    }
+    private val updatedState = MutableSharedFlow<GameViewState>()
+
+    val state: StateFlow<GameViewState> = combine(
+        initialState,
+        updatedState
+    ) { initialState, updatedState ->
+        // if the answers are different then prefer the initialState
+        if (initialState.answer != updatedState.answer) initialState
+        else updatedState
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        GameViewState(initialWord)
+    )
+
+    init {
+        wordInteractor(WordInteractor.Params(wordLength))
+    }
 
     fun onKeyClicked(key: Key) {
         when (key) {
@@ -62,7 +82,7 @@ class HomeViewModel @Inject constructor() : ViewModel() {
             val currentWord =
                 currentState.currentWord ?: throw IllegalStateException("Current word is null")
 
-            if (currentWord.letterCount >= wordSize) {
+            if (currentWord.letterCount >= currentState.answer.length) {
                 Timber.d("Word is full")
                 //TODO - Should we show a prompt to the user?
                 return@launch
@@ -77,7 +97,7 @@ class HomeViewModel @Inject constructor() : ViewModel() {
             val newWord = WordState(tiles)
             val newState = currentState.copy(currentWord = newWord)
 
-            _state.emit(newState)
+            updatedState.emit(newState)
         }
     }
 
@@ -88,7 +108,7 @@ class HomeViewModel @Inject constructor() : ViewModel() {
                 currentState.currentWord ?: throw IllegalStateException("Current word is null")
 
             // check if the word is complete
-            if (currentWord.letterCount != wordSize) {
+            if (currentWord.letterCount != currentState.wordLength) {
                 Timber.d("Word isn't complete")
                 //TODO - Should we show a prompt to the user?
                 return@launch
@@ -97,7 +117,7 @@ class HomeViewModel @Inject constructor() : ViewModel() {
             //TODO - check if it's in the dictionary
 
             // check it against the actual word
-            val completeWord = checkGuess(currentWord, tempAnswer)
+            val completeWord = checkGuess(currentWord, currentState.answer)
 
             // mark the current word as complete
             val completeWords = currentState.completeWords.toMutableList().apply {
@@ -122,7 +142,7 @@ class HomeViewModel @Inject constructor() : ViewModel() {
                 remainingGuesses = remainingGuesses
             )
 
-            _state.emit(newState)
+            updatedState.emit(newState)
         }
     }
 
@@ -146,7 +166,7 @@ class HomeViewModel @Inject constructor() : ViewModel() {
             val newWord = WordState(tiles)
             val newState = currentState.copy(currentWord = newWord)
 
-            _state.emit(newState)
+            updatedState.emit(newState)
         }
     }
 }

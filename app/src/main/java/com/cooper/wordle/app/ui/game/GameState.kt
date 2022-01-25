@@ -1,4 +1,4 @@
-package com.cooper.wordle.app.ui.home
+package com.cooper.wordle.app.ui.game
 
 import androidx.compose.ui.graphics.Color
 import com.cooper.wordle.app.ui.theme.ColorTone3
@@ -44,4 +44,10 @@ data class WordState(val tileStates: List<TileState>) {
 
     val isCorrect: Boolean
         get() = tileStates.all { it is TileState.Correct }
+
+    companion object {
+        fun emptyWord(size: Int): WordState {
+            return WordState(List(size) { TileState.Empty })
+        }
+    }
 }

@@ -6,8 +6,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.cooper.wordle.app.ui.home.TileState
-import com.cooper.wordle.app.ui.home.WordState
+import com.cooper.wordle.app.ui.game.TileState
+import com.cooper.wordle.app.ui.game.WordState
 
 @Composable
 fun WordRow(wordState: WordState, modifier: Modifier = Modifier) {

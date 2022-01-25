@@ -5,7 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.cooper.wordle.app.ui.home.HomeScreen
+import com.cooper.wordle.app.ui.game.GameScreen
 
 internal sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -26,7 +26,7 @@ internal fun AppNavigation(
     ) {
 
         composable(Screen.Home.route) {
-            HomeScreen()
+            GameScreen()
         }
 
         composable(Screen.Help.route) {
