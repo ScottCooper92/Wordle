@@ -7,23 +7,22 @@ import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.cooper.wordle.app.ui.game.WordState
+import com.cooper.wordle.app.ui.game.GridState
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WordGrid(
-    wordLength: Int,
-    wordStates: List<WordState>,
+    gridState: GridState,
     modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
-        cells = GridCells.Fixed(wordLength),
+        cells = GridCells.Fixed(gridState.length),
         modifier = modifier
     ) {
-        wordStates.forEach { wordState ->
-            wordState.tileStates.forEach { tileState ->
+        gridState.grid.forEach { row ->
+            row.tileStates.forEach { tile ->
                 item {
-                    LetterTile(tileState = tileState, modifier = Modifier.padding(4.dp))
+                    LetterTile(tileState = tile, modifier = Modifier.padding(4.dp))
                 }
             }
         }

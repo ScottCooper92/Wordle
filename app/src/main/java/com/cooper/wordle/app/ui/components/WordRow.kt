@@ -6,11 +6,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.cooper.wordle.app.ui.game.Row
 import com.cooper.wordle.app.ui.game.TileState
-import com.cooper.wordle.app.ui.game.WordState
 
 @Composable
-fun WordRow(wordState: WordState, modifier: Modifier = Modifier) {
+fun WordRow(row: Row, modifier: Modifier = Modifier) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         modifier = modifier
@@ -18,7 +18,7 @@ fun WordRow(wordState: WordState, modifier: Modifier = Modifier) {
             .fillMaxWidth()
     ) {
         val tileModifier = Modifier.weight(1f)
-        wordState.tileStates.forEach { tileState ->
+        row.tileStates.forEach { tileState ->
             LetterTile(tileState, tileModifier)
         }
     }
@@ -28,14 +28,14 @@ fun WordRow(wordState: WordState, modifier: Modifier = Modifier) {
 @Composable
 fun PreviewEmptyWordRow() {
     val tileState = TileState.Empty
-    val wordState = WordState(listOf(tileState, tileState, tileState, tileState, tileState))
+    val wordState = Row(listOf(tileState, tileState, tileState, tileState, tileState))
     WordRow(wordState, Modifier.height(100.dp))
 }
 
 @Preview("partial word")
 @Composable
 fun PreviewPartialWordRow() {
-    val wordState = WordState(
+    val wordState = Row(
         listOf(
             TileState.Foo('P'),
             TileState.Foo('A'),
@@ -50,7 +50,7 @@ fun PreviewPartialWordRow() {
 @Preview("full word")
 @Composable
 fun PreviewFullWordRow() {
-    val wordState = WordState(
+    val wordState = Row(
         listOf(
             TileState.Foo('P'),
             TileState.Foo('A'),
@@ -65,7 +65,7 @@ fun PreviewFullWordRow() {
 @Preview("absent word")
 @Composable
 fun PreviewAbsentWordRow() {
-    val wordState = WordState(
+    val wordState = Row(
         listOf(
             TileState.Absent('P'),
             TileState.Absent('A'),
@@ -80,7 +80,7 @@ fun PreviewAbsentWordRow() {
 @Preview("partially present word")
 @Composable
 fun PreviewPartiallyPresentWordRow() {
-    val wordState = WordState(
+    val wordState = Row(
         listOf(
             TileState.Absent('P'),
             TileState.Present('A'),
@@ -95,7 +95,7 @@ fun PreviewPartiallyPresentWordRow() {
 @Preview("partially correct word")
 @Composable
 fun PreviewPartiallyCorrectWordRow() {
-    val wordState = WordState(
+    val wordState = Row(
         listOf(
             TileState.Absent('P'),
             TileState.Present('A'),
@@ -110,7 +110,7 @@ fun PreviewPartiallyCorrectWordRow() {
 @Preview("correct word")
 @Composable
 fun PreviewCorrectWordRow() {
-    val wordState = WordState(
+    val wordState = Row(
         listOf(
             TileState.Correct('P'),
             TileState.Correct('A'),
@@ -126,7 +126,7 @@ fun PreviewCorrectWordRow() {
 @Composable
 private fun PreviewRowSize() {
     val tileState = TileState.Empty
-    val wordState = WordState(
+    val wordState = Row(
         listOf(tileState, tileState, tileState, tileState, tileState)
     )
     Column(

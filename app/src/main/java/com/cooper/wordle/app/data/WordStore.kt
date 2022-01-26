@@ -6,7 +6,6 @@ import javax.inject.Inject
 import kotlin.random.Random
 import kotlin.random.nextInt
 
-//TODO - Inject the dispatcher
 class WordStore @Inject constructor(@ApplicationContext private val context: Context) {
 
     fun randomWord(letters: Letters): String {
@@ -17,11 +16,11 @@ class WordStore @Inject constructor(@ApplicationContext private val context: Con
             }
     }
 
-    enum class Letters(val filename: String) {
-        FOUR("4letterwords.txt"),
-        FIVE("5letterwords.txt"),
-        SIX("6letterwords.txt"),
-        SEVEN("7letterwords.txt")
+    enum class Letters(val size: Int, val filename: String) {
+        FOUR(4, "4letterwords.txt"),
+        FIVE(5, "5letterwords.txt"),
+        SIX(6, "6letterwords.txt"),
+        SEVEN(7, "7letterwords.txt")
     }
 }
 

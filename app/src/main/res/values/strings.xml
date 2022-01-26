@@ -1,6 +1,13 @@
 <resources>
     <string name="app_name">Wordle</string>
     <string name="wordle">Wordle</string>
+
+    <string name="welcome_text">Welcome to Wordle!\n
+        Pick your desired number of letters to get started,
+        the more letters the harder the game.\n
+        If you aren\'t sure how to play then click on the ? icon at the top.</string>
+
     <string name="help">Help</string>
     <string name="statistics">Statistics</string>
+    <string name="letter_select_button">%d Letters</string>
 </resources>
