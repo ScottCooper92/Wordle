@@ -5,10 +5,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [
-        FourLetterWordEntity::class,
-        FiveLetterWordEntity::class,
-        SixLetterWordEntity::class,
-        SevenLetterWordEntity::class,
+        WordEntity::class,
     ],
     version = 1,
     exportSchema = false
