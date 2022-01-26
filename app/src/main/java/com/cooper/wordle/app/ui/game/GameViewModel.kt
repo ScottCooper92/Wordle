@@ -4,14 +4,13 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cooper.wordle.app.data.WordStore
+import com.cooper.wordle.app.data.*
 import com.cooper.wordle.app.interactor.*
+import com.cooper.wordle.app.ui.common.SnackbarManager
+import com.cooper.wordle.app.ui.common.UiMessage
 import com.cooper.wordle.app.ui.components.Key
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,8 +20,13 @@ sealed class GameViewState {
 
     data class InProgress(
         val solution: String,
-        val gridState: GridState,
+        val gridState: GridState
     ) : GameViewState()
+}
+
+sealed class GameUiEffect {
+    data class ShowMessage(val message: String) : GameUiEffect()
+    object ClearMessage : GameUiEffect()
 }
 
 @HiltViewModel
@@ -31,6 +35,7 @@ class GameViewModel @Inject constructor(
     private val addLetter: AddLetter,
     private val removeLetter: RemoveLetter,
     private val evaluateWord: EvaluateWord,
+    private val snackbarManager: SnackbarManager,
     observeGameState: ObserveGameState,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -49,12 +54,25 @@ class GameViewModel @Inject constructor(
         GameViewState.Loading
     )
 
+    private val _effects = MutableSharedFlow<GameUiEffect>()
+    val effects: Flow<GameUiEffect>
+        get() = _effects
+
     init {
         viewModelScope.launch {
             observeGameState(ObserveGameState.Params())
         }
         viewModelScope.launch {
             startGame.executeSync(StartGame.Params(wordLength))
+        }
+
+        viewModelScope.launch {
+            snackbarManager.messages.collect {
+                when {
+                    it != null -> _effects.emit(GameUiEffect.ShowMessage(it.message))
+                    else -> _effects.emit(GameUiEffect.ClearMessage)
+                }
+            }
         }
     }
 
@@ -80,7 +98,18 @@ class GameViewModel @Inject constructor(
 
     private fun onStringKeyClicked(key: Key.StringKey) {
         viewModelScope.launch {
-            evaluateWord.executeSync(Unit)
+            evaluateWord(Unit).collectLatest { invokeStatus ->
+                if (invokeStatus is InvokeError) {
+                    when (invokeStatus.throwable) {
+                        is InvalidGuess -> {
+                            snackbarManager.addMessage(UiMessage("Not enough letters"))
+                        }
+                        is IncorrectGuess -> {
+                            snackbarManager.addMessage(UiMessage("Not in word list"))
+                        }
+                    }
+                }
+            }
         }
     }
 }

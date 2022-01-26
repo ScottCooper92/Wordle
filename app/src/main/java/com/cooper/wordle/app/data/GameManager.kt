@@ -7,11 +7,16 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
+class GameStateException(override val message: String) : Throwable()
+class InvalidGuess(override val message: String) : Throwable()
+class IncorrectGuess(override val message: String) : Throwable()
+
 @Singleton
 class GameManager @Inject constructor(private val wordStore: WordStore) {
 
     private val _state: MutableStateFlow<GameState> = MutableStateFlow(GameState.Uninitialised)
-    val state: StateFlow<GameState> = _state
+    val state: StateFlow<GameState>
+        get() = _state
 
     suspend fun newGame(letters: WordStore.Letters) {
         val word = wordStore.randomWord(letters)
@@ -29,15 +34,14 @@ class GameManager @Inject constructor(private val wordStore: WordStore) {
     suspend fun addLetter(char: Char) {
         val currentState = state.value
         if (currentState !is GameState.InProgress)
-            throw IllegalStateException("Game is not in progress $state")
+            throw GameStateException("Game is not in progress $state")
 
         val gridState = currentState.gridState
         val row = gridState.getRow(currentState.rowIndex)
 
         if (!row.hasSpace) {
             Timber.d("Word is full")
-            //TODO - Should we show a prompt to the user?
-            //return@launch
+            return
         }
 
         // add the tile by replacing the first empty tile
@@ -60,15 +64,14 @@ class GameManager @Inject constructor(private val wordStore: WordStore) {
     suspend fun removeLetter() {
         val currentState = state.value
         if (currentState !is GameState.InProgress)
-            throw IllegalStateException("Game is not in progress $state")
+            throw GameStateException("Game is not in progress $state")
 
         val gridState = currentState.gridState
         val row = gridState.getRow(currentState.rowIndex)
 
         if (!row.isPopulated) {
             Timber.d("Word is empty")
-            //TODO - Should we show a prompt to the user?
-            //return@launch
+            return
         }
 
         // add the tile by replacing the first empty tile
@@ -90,7 +93,7 @@ class GameManager @Inject constructor(private val wordStore: WordStore) {
     suspend fun evaluateCurrentRow() {
         val currentState = state.value
         if (currentState !is GameState.InProgress)
-            throw IllegalStateException("Game is not in progress $state")
+            throw GameStateException("Game is not in progress $state")
 
         val gridState = currentState.gridState
         val row = gridState.getRow(currentState.rowIndex)
@@ -127,7 +130,7 @@ class GameManager @Inject constructor(private val wordStore: WordStore) {
     private fun updateGridState(updatedRow: Row): GridState {
         val currentState = state.value
         if (currentState !is GameState.InProgress)
-            throw IllegalStateException("Game is not in progress $state")
+            throw GameStateException("Game is not in progress $state")
 
         val gridState = currentState.gridState
 
@@ -139,14 +142,18 @@ class GameManager @Inject constructor(private val wordStore: WordStore) {
         )
     }
 
-    private fun evaluateGuess(guess: Row, answer: String): Row {
-        if (guess.letterCount != answer.length)
+    /**
+     * TODO - Solution POSEY, guess POPPY highlighting both Ps as present
+     */
+    private suspend fun evaluateGuess(guess: Row, answer: String): Row {
+        if (guess.tileStates.size != answer.length)
             throw IllegalArgumentException("Guess isn't the same length as answer. Answer: $answer, Guess: $guess")
 
         if (!guess.isFullyPopulated)
-            throw IllegalStateException("Not a valid guess $guess")
+            throw InvalidGuess("Not enough letters in $guess")
 
-        //TODO - Check if it is an actual word
+        if (!wordStore.wordExists(guess.toString()))
+            throw IncorrectGuess("Not a word")
 
         val tiles = guess.tileStates.toMutableList()
         val result = tiles.mapIndexed { index, tileState ->

@@ -1,4 +1,4 @@
-package com.cooper.wordle.app.ui.game
+package com.cooper.wordle.app.data
 
 import androidx.compose.ui.graphics.Color
 import com.cooper.wordle.app.ui.theme.ColorTone3
@@ -56,9 +56,6 @@ data class GridState(
 
 data class Row(val tileStates: List<TileState>) {
 
-    val letterCount: Int
-        get() = tileStates.count { it !is TileState.Empty }
-
     val isPopulated: Boolean
         get() = tileStates.any { it is TileState.Foo }
 
@@ -73,6 +70,12 @@ data class Row(val tileStates: List<TileState>) {
 
     val isCorrect: Boolean
         get() = tileStates.all { it is TileState.Correct }
+
+    override fun toString(): String {
+        return tileStates.joinToString(separator = "") { tile ->
+            tile.char?.toString() ?: ""
+        }
+    }
 
     companion object {
         fun emptyWord(size: Int): Row {

@@ -1,33 +1,33 @@
 package com.cooper.wordle.app.data
 
-import android.content.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
+import com.cooper.wordle.app.data.db.WordDao
 import javax.inject.Inject
-import kotlin.random.Random
-import kotlin.random.nextInt
 
-class WordStore @Inject constructor(@ApplicationContext private val context: Context) {
+class WordStore @Inject constructor(private val wordDao: WordDao) {
 
-    fun randomWord(letters: Letters): String {
-        return context.assets.open(letters.filename)
-            .bufferedReader()
-            .useLines {
-                it.random()
-            }
+    suspend fun randomWord(letters: Letters): String {
+        return when (letters) {
+            Letters.FOUR -> wordDao.getRandom4LetterWord()
+            Letters.FIVE -> wordDao.getRandom5LetterWord()
+            Letters.SIX -> wordDao.getRandom6LetterWord()
+            Letters.SEVEN -> wordDao.getRandom7LetterWord()
+        }.word
     }
 
-    enum class Letters(val size: Int, val filename: String) {
-        FOUR(4, "4letterwords.txt"),
-        FIVE(5, "5letterwords.txt"),
-        SIX(6, "6letterwords.txt"),
-        SEVEN(7, "7letterwords.txt")
+    suspend fun wordExists(word: String): Boolean {
+        return when (word.count()) {
+            4 -> wordDao.validate4LetterWord(word)
+            5 -> wordDao.validate5LetterWord(word)
+            6 -> wordDao.validate6LetterWord(word)
+            7 -> wordDao.validate7LetterWord(word)
+            else -> throw IllegalArgumentException("Word $word must be between 4-5 chars long")
+        } > 0
+    }
+
+    enum class Letters(val size: Int) {
+        FOUR(4),
+        FIVE(5),
+        SIX(6),
+        SEVEN(7)
     }
 }
-
-/**
- * Simple function to choose a random int between the start and end of a sequence and return
- * the item at that index.
- */
-fun <T> Sequence<T>.random(): T = withIndex().last {
-    Random.nextInt(0..it.index) == 0
-}.value

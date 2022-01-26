@@ -1,7 +1,7 @@
 package com.cooper.wordle.app.interactor
 
 import com.cooper.wordle.app.data.GameManager
-import com.cooper.wordle.app.ui.game.GameState
+import com.cooper.wordle.app.data.GameState
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 

@@ -3,14 +3,13 @@ package com.cooper.wordle.app.ui.game
 import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -18,12 +17,18 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintLayoutScope
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.cooper.wordle.app.data.GridState
+import com.cooper.wordle.app.data.Row
+import com.cooper.wordle.app.data.TileState
 import com.cooper.wordle.app.ui.components.Key
 import com.cooper.wordle.app.ui.components.Keyboard
 import com.cooper.wordle.app.ui.components.WordGrid
 import com.cooper.wordle.app.ui.components.WordleAppBar
 import com.cooper.wordle.app.ui.theme.WordleTheme
 import com.google.accompanist.pager.ExperimentalPagerApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @Composable
@@ -32,7 +37,9 @@ fun GameScreen(
 ) {
     val state by viewModel.state.collectAsState()
     Timber.d("$state")
-    GameScreen(state,
+    GameScreen(
+        state,
+        viewModel.effects,
         onActionClicked = { },
         onKeyClicked = { key ->
             viewModel.onKeyClicked(key)
@@ -48,14 +55,40 @@ fun GameScreen(
 @Composable
 private fun GameScreen(
     state: GameViewState,
+    effects: Flow<GameUiEffect>,
     onActionClicked: () -> Unit,
     onKeyClicked: (key: Key) -> Unit
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(effects) {
+        effects.collect { effect ->
+            when (effect) {
+                is GameUiEffect.ShowMessage -> {
+                    launch {
+                        snackbarHostState.showSnackbar(effect.message)
+                    }
+                }
+                GameUiEffect.ClearMessage -> {
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                }
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             WordleAppBar(onActionClicked)
-        }
+        },
     ) {
+        SnackbarHost(
+            hostState = snackbarHostState,
+            snackbar = { snackBarData -> Snackbar(snackbarData = snackBarData) },
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth()
+        )
+
         ConstraintLayout(modifier = Modifier.fillMaxSize()) {
             when (state) {
                 GameViewState.Loading -> {
@@ -174,7 +207,12 @@ fun PreviewGameScreen() {
         gridState = GridState(6, 5, listOf(first, second, third, third, third, third))
     )
     WordleTheme {
-        GameScreen(state, {}) {}
+        GameScreen(
+            state = state,
+            effects = flow {},
+            onActionClicked = {},
+            onKeyClicked = {}
+        )
     }
 }
 
@@ -182,6 +220,11 @@ fun PreviewGameScreen() {
 @Composable
 fun PreviewGameScreenLoading() {
     WordleTheme {
-        GameScreen(GameViewState.Loading, {}) {}
+        GameScreen(
+            state = GameViewState.Loading,
+            effects = flow {},
+            onActionClicked = {},
+            onKeyClicked = {}
+        )
     }
 }

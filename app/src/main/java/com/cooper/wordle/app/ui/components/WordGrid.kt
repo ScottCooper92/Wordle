@@ -7,7 +7,7 @@ import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.cooper.wordle.app.ui.game.GridState
+import com.cooper.wordle.app.data.GridState
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
