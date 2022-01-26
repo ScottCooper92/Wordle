@@ -17,6 +17,7 @@ fun WordGrid(
 ) {
     LazyVerticalGrid(
         cells = GridCells.Fixed(gridState.length),
+        userScrollEnabled = false,
         modifier = modifier
     ) {
         gridState.grid.forEach { row ->

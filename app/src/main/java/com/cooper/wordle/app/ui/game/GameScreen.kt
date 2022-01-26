@@ -62,7 +62,6 @@ private fun GameScreen(
     onKeyClicked: (key: Key) -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-
     LaunchedEffect(effects) {
         effects.collect { effect ->
             when (effect) {
@@ -79,9 +78,7 @@ private fun GameScreen(
     }
 
     Scaffold(
-        topBar = {
-            WordleAppBar(onActionClicked)
-        },
+        topBar = { WordleAppBar(onActionClicked) },
     ) {
         SnackbarHost(
             hostState = snackbarHostState,
@@ -93,9 +90,7 @@ private fun GameScreen(
 
         ConstraintLayout(modifier = Modifier.fillMaxSize()) {
             when (state) {
-                GameViewState.Loading -> {
-                    Loading()
-                }
+                GameViewState.Loading -> Loading()
                 is GameViewState.InProgress -> GameBoard(state.gridState, onKeyClicked)
             }
         }
@@ -147,7 +142,7 @@ private fun ConstraintLayoutScope.GameBoard(
                 )
 
                 width = Dimension.fillToConstraints
-                height = Dimension.ratio("5:6")
+                height = Dimension.ratio("${gridState.length}:${gridState.height}")
             }
     )
 
@@ -167,6 +162,42 @@ private fun ConstraintLayoutScope.GameBoard(
                 height = Dimension.ratio("16:5")
             }
     )
+}
+
+@Preview(name = "empty grid length 4")
+@Composable
+private fun PreviewEmptyGameScreen(wordSize: Int = 4) {
+    val emptyRow = Row(List(wordSize) { TileState.Empty })
+    val state = GameViewState.InProgress(
+        solution = "Answer",
+        gridState = GridState(6, wordSize, List(6) { emptyRow })
+    )
+    WordleTheme {
+        GameScreen(
+            state = state,
+            effects = flow {},
+            onActionClicked = {},
+            onKeyClicked = {}
+        )
+    }
+}
+
+@Preview(name = "empty grid length 5")
+@Composable
+private fun PreviewEmptyGameScreenSize5() {
+    PreviewEmptyGameScreen(5)
+}
+
+@Preview(name = "empty grid length 6")
+@Composable
+private fun PreviewEmptyGameScreenSize6() {
+    PreviewEmptyGameScreen(6)
+}
+
+@Preview(name = "empty grid length 7")
+@Composable
+private fun PreviewEmptyGameScreenSize7() {
+    PreviewEmptyGameScreen(7)
 }
 
 @Preview(name = "light")
