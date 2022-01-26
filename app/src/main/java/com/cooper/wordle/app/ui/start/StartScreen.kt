@@ -15,17 +15,23 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.cooper.wordle.app.R
 import com.cooper.wordle.app.data.WordStore
+import com.cooper.wordle.app.ui.components.AppBarAction
 import com.cooper.wordle.app.ui.components.WordleAppBar
 import com.cooper.wordle.app.ui.theme.WordleTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StartScreen(
-    onLettersPicked: (letters: WordStore.Letters) -> Unit
+    onLettersPicked: (letters: WordStore.Letters) -> Unit,
+    onHelpClicked: () -> Unit
 ) {
     Scaffold(
         topBar = {
-            WordleAppBar(onActionClicked = {})
+            WordleAppBar(onActionClicked = { action ->
+                when (action) {
+                    AppBarAction.HELP -> onHelpClicked()
+                }
+            })
         }
     ) {
         val scrollState = rememberScrollState()
@@ -60,8 +66,6 @@ fun StartScreen(
 @Composable
 fun PreviewStartScreen() {
     WordleTheme {
-        StartScreen {
-
-        }
+        StartScreen({}, {})
     }
 }

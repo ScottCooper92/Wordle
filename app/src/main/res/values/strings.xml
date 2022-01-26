@@ -10,4 +10,15 @@
     <string name="help">Help</string>
     <string name="statistics">Statistics</string>
     <string name="letter_select_button">%d Letters</string>
+
+    <string name="how_to_play">How To Play</string>
+    <string name="instructions">Guess the word in 6 tries.\n
+        Each guess must be a valid 5 letter word. Hit the enter button to submit.
+
+        After each guess, the color of the tiles will change to show how close your guess was to the word.
+    </string>
+    <string name="examples">Examples</string>
+    <string name="correct_example">The letter <b>W</b> is in the word and in the correct spot.</string>
+    <string name="present_example">The letter <b>I</b> is in the word but in the wrong spot</string>
+    <string name="incorrect_example">The letter <b>U</b> is not in the word in any spot.</string>
 </resources>

@@ -20,10 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.cooper.wordle.app.data.GridState
 import com.cooper.wordle.app.data.Row
 import com.cooper.wordle.app.data.TileState
-import com.cooper.wordle.app.ui.components.Key
-import com.cooper.wordle.app.ui.components.Keyboard
-import com.cooper.wordle.app.ui.components.WordGrid
-import com.cooper.wordle.app.ui.components.WordleAppBar
+import com.cooper.wordle.app.ui.components.*
 import com.cooper.wordle.app.ui.theme.WordleTheme
 import com.google.accompanist.pager.ExperimentalPagerApi
 import kotlinx.coroutines.flow.Flow
@@ -33,14 +30,19 @@ import timber.log.Timber
 
 @Composable
 fun GameScreen(
-    viewModel: GameViewModel = hiltViewModel()
+    viewModel: GameViewModel = hiltViewModel(),
+    onHelpClicked: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     Timber.d("$state")
     GameScreen(
         state,
         viewModel.effects,
-        onActionClicked = { },
+        onActionClicked = { action ->
+            when (action) {
+                AppBarAction.HELP -> onHelpClicked()
+            }
+        },
         onKeyClicked = { key ->
             viewModel.onKeyClicked(key)
         })
@@ -56,7 +58,7 @@ fun GameScreen(
 private fun GameScreen(
     state: GameViewState,
     effects: Flow<GameUiEffect>,
-    onActionClicked: () -> Unit,
+    onActionClicked: (AppBarAction) -> Unit,
     onKeyClicked: (key: Key) -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }

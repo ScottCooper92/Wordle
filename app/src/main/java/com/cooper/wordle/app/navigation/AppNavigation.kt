@@ -9,7 +9,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.cooper.wordle.app.data.WordStore
 import com.cooper.wordle.app.ui.game.GameScreen
+import com.cooper.wordle.app.ui.help.HelpScreen
 import com.cooper.wordle.app.ui.start.StartScreen
+import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
+import com.google.accompanist.navigation.material.bottomSheet
 
 private sealed class Screen(val route: String) {
 
@@ -25,6 +28,7 @@ private sealed class Screen(val route: String) {
     object Stats : Screen("stats")
 }
 
+@OptIn(ExperimentalMaterialNavigationApi::class)
 @Composable
 internal fun AppNavigation(
     navController: NavHostController,
@@ -37,9 +41,14 @@ internal fun AppNavigation(
     ) {
 
         composable(Screen.Start.route) {
-            StartScreen { letters ->
-                navController.navigate(Screen.Game.createRoute(letters))
-            }
+            StartScreen(
+                onLettersPicked = { letters ->
+                    navController.navigate(Screen.Game.createRoute(letters))
+                },
+                onHelpClicked = {
+                    navController.navigate(Screen.Help.route)
+                }
+            )
         }
 
         composable(
@@ -48,11 +57,15 @@ internal fun AppNavigation(
                 navArgument("letters") { type = NavType.EnumType(WordStore.Letters::class.java) }
             )
         ) {
-            GameScreen()
+            GameScreen(
+                onHelpClicked = {
+                    navController.navigate(Screen.Help.route)
+                }
+            )
         }
 
-        composable(Screen.Help.route) {
-
+        bottomSheet(Screen.Help.route) {
+            HelpScreen()
         }
 
         composable(Screen.Settings.route) {
