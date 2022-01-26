@@ -1,48 +1,60 @@
 package com.cooper.wordle.app.ui.components
 
 import android.content.res.Configuration
-import androidx.compose.foundation.background
+import android.graphics.Typeface
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import android.widget.TextView.AUTO_SIZE_TEXT_TYPE_UNIFORM
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Text
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import com.cooper.wordle.app.data.TileState
+import com.cooper.wordle.app.ui.theme.WordleTheme
 
 @Composable
 fun LetterTile(
     tileState: TileState,
     modifier: Modifier = Modifier
 ) {
-    BoxWithConstraints(
-        contentAlignment = Alignment.Center,
+    Surface(
+        color = tileState.tileBackground,
         modifier = modifier
             .fillMaxSize()
-            .background(tileState.tileBackground)
             .aspectRatio(1f)
             .border(2.dp, tileState.tileBorder)
     ) {
-        if (tileState.char != null) {
-            val fontSize = with(LocalDensity.current) {
-                maxWidth.toSp() * .8
+
+        val color = LocalContentColor.current
+
+        // we're using a TextView with autoSize until similar functionality is present in compose
+        //TODO - Replace this when compose has this functionality and reduce minSdk back to 21
+        AndroidView(factory = { context ->
+            TextView(context).apply {
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+                setAutoSizeTextTypeWithDefaults(AUTO_SIZE_TEXT_TYPE_UNIFORM)
+                text = tileState.char?.toString()
+                textAlignment = View.TEXT_ALIGNMENT_CENTER
+                typeface = Typeface.MONOSPACE
             }
-            Text(
-                text = tileState.char.toString(),
-                fontSize = fontSize,
-                color = Color.White,
-                lineHeight = fontSize,
-                textAlign = TextAlign.Center,
-            )
-        }
+        }, update = { textView ->
+            textView.apply {
+                textView.setTextColor(color.toArgb())
+                text = tileState.char?.toString()
+            }
+        })
     }
 }
 
@@ -50,48 +62,62 @@ fun LetterTile(
 @Preview(name = "empty tile dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun PreviewEmptyTile() {
-    LetterTile(
-        tileState = TileState.Empty,
-        modifier = Modifier.size(128.dp)
-    )
+    WordleTheme {
+        LetterTile(
+            tileState = TileState.Empty,
+            modifier = Modifier.size(128.dp)
+        )
+    }
 }
 
 @Preview(name = "foo tile")
 @Preview(name = "foo tile dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun PreviewFooTile() {
-    LetterTile(
-        tileState = TileState.Foo('A'),
-        modifier = Modifier.size(128.dp)
-    )
+    WordleTheme {
+        LetterTile(
+            tileState = TileState.Foo('A'),
+            modifier = Modifier.size(128.dp)
+        )
+    }
 }
 
 @Preview(name = "absent tile")
 @Preview(name = "absent tile dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun PreviewAbsentTile() {
-    LetterTile(
-        tileState = TileState.Absent('A'),
-        modifier = Modifier.size(128.dp)
-    )
+    WordleTheme {
+        LetterTile(
+            tileState = TileState.Absent('A'),
+            modifier = Modifier.size(128.dp)
+        )
+    }
 }
 
 @Preview(name = "present tile")
 @Preview(name = "present tile dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun PreviewPresentTile() {
-    LetterTile(
-        tileState = TileState.Present('A'),
-        modifier = Modifier.size(128.dp)
-    )
+    WordleTheme {
+        LetterTile(
+            tileState = TileState.Present('A'),
+            modifier = Modifier.size(128.dp)
+        )
+    }
 }
 
 @Preview(name = "correct tile")
-@Preview(name = "correct tile dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(
+    name = "correct tile dark",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
 @Composable
 fun PreviewCorrectTile() {
-    LetterTile(
-        tileState = TileState.Correct('A'),
-        modifier = Modifier.size(128.dp)
-    )
+    WordleTheme {
+        LetterTile(
+            tileState = TileState.Correct('A'),
+            modifier = Modifier.size(128.dp)
+        )
+    }
 }
