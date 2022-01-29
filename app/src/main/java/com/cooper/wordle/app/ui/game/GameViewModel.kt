@@ -80,7 +80,6 @@ class GameViewModel @Inject constructor(
         when (key) {
             is Key.IconKey -> onIconKeyClicked(key)
             is Key.CharKey -> onCharKeyClicked(key)
-            is Key.StringKey -> onStringKeyClicked(key)
         }
     }
 
@@ -92,11 +91,14 @@ class GameViewModel @Inject constructor(
 
     private fun onIconKeyClicked(key: Key.IconKey) {
         viewModelScope.launch {
-            removeLetter.executeSync(Unit)
+            when(key){
+                Key.DELETE -> removeLetter.executeSync(Unit)
+                Key.SUBMIT -> evaluateWord()
+            }
         }
     }
 
-    private fun onStringKeyClicked(key: Key.StringKey) {
+    private fun evaluateWord() {
         viewModelScope.launch {
             evaluateWord(Unit).collectLatest { invokeStatus ->
                 if (invokeStatus is InvokeError) {

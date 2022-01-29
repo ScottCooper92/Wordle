@@ -19,6 +19,6 @@
     </string>
     <string name="examples">Examples</string>
     <string name="correct_example">The letter <b>W</b> is in the word and in the correct spot.</string>
-    <string name="present_example">The letter <b>I</b> is in the word but in the wrong spot</string>
+    <string name="present_example">The letter <b>I</b> is in the word but in the wrong spot.</string>
     <string name="incorrect_example">The letter <b>U</b> is not in the word in any spot.</string>
 </resources>

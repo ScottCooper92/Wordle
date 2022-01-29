@@ -4,7 +4,6 @@ import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.*
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -83,9 +82,7 @@ private fun GameScreen(
         SnackbarHost(
             hostState = snackbarHostState,
             snackbar = { snackBarData -> Snackbar(snackbarData = snackBarData) },
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         )
 
         ConstraintLayout(modifier = Modifier.fillMaxSize()) {
@@ -118,7 +115,7 @@ private fun ConstraintLayoutScope.GameBoard(
     val (grid, keyboard) = createRefs()
     val horizontalPadding = 0.05f
     val guidelineTop = createGuidelineFromTop(0.05f)
-    val guidelineBottom = createGuidelineFromBottom(0.03f)
+    val guidelineBottom = createGuidelineFromBottom(0.01f)
     val guidelineStart = createGuidelineFromStart(horizontalPadding)
     val guidelineEnd = createGuidelineFromEnd(horizontalPadding)
 
@@ -131,8 +128,8 @@ private fun ConstraintLayoutScope.GameBoard(
                 linkTo(
                     start = guidelineStart,
                     end = guidelineEnd,
-                    startMargin = 32.dp,
-                    endMargin = 32.dp
+                    startMargin = 48.dp,
+                    endMargin = 48.dp
                 )
                 linkTo(
                     top = guidelineTop,
@@ -151,15 +148,15 @@ private fun ConstraintLayoutScope.GameBoard(
         modifier = Modifier
             .constrainAs(keyboard) {
                 linkTo(
-                    start = guidelineStart,
-                    end = guidelineEnd,
-                    startMargin = 24.dp,
-                    endMargin = 24.dp
+                    start = parent.start,
+                    end = parent.end,
+                    startMargin = 8.dp,
+                    endMargin = 8.dp
                 )
                 linkTo(top = grid.bottom, bottom = guidelineBottom, bias = 1f)
 
-                width = Dimension.matchParent
-                height = Dimension.ratio("16:5")
+                width = Dimension.fillToConstraints
+                height = Dimension.ratio("2:1")
             }
     )
 }

@@ -4,7 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardBackspace
+import androidx.compose.material.icons.filled.Backspace
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -17,14 +18,19 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.constraintlayout.compose.ChainStyle
+import androidx.constraintlayout.compose.ConstrainedLayoutReference
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.ConstraintLayoutBaseScope.HorizontalAnchor
+import androidx.constraintlayout.compose.Dimension
 import com.cooper.wordle.app.ui.theme.KeyBackground
 
-sealed class Key(val aspectRatio: Float = 65f / 58) {
-    data class IconKey(val icon: ImageVector) : Key()
+sealed class Key(val aspectRatio: String = "7:12") {
+    sealed class IconKey(val icon: ImageVector) : Key(aspectRatio = "1:1.13")
+    object SUBMIT : IconKey(Icons.Default.Done)
+    object DELETE : IconKey(Icons.Default.Backspace)
 
-    sealed class TextKey(val text: String) : Key()
-    data class CharKey(val char: Char) : TextKey(char.toString())
-    data class StringKey(val string: String) : TextKey(string)
+    data class CharKey(val char: Char) : Key()
 }
 
 private val firstRow = listOf(
@@ -53,7 +59,7 @@ private val secondRow = listOf(
 )
 
 private val thirdRow = listOf(
-    Key.StringKey("ENTER"),
+    Key.SUBMIT,
     Key.CharKey('Z'),
     Key.CharKey('X'),
     Key.CharKey('C'),
@@ -61,54 +67,55 @@ private val thirdRow = listOf(
     Key.CharKey('B'),
     Key.CharKey('N'),
     Key.CharKey('M'),
-    Key.IconKey(Icons.Default.KeyboardBackspace)
+    Key.DELETE
 )
+
+private val rows = listOf(firstRow, secondRow, thirdRow)
 
 @Composable
 fun Keyboard(
     onKeyClicked: (key: Key) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-            .height(IntrinsicSize.Min)
-            .fillMaxWidth()
-    ) {
-        val rowModifier = Modifier.weight(1f)
-        KeyboardRow(keys = firstRow, onKeyClicked, rowModifier)
-        KeyboardRow(keys = secondRow, onKeyClicked, rowModifier)
-        KeyboardRow(keys = thirdRow, onKeyClicked, rowModifier)
-    }
-}
+    ConstraintLayout(modifier = modifier.fillMaxWidth()) {
 
-@Composable
-private fun KeyboardRow(
-    keys: List<Key>,
-    onKeyClicked: (key: Key) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-        modifier = modifier.fillMaxWidth()
-    ) {
-        keys.forEach { key ->
-            Key(key, onKeyClicked, Modifier.weight(1f))
+        val guidelines = mutableListOf<HorizontalAnchor>()
+        val step = 1f / rows.size
+        for (i in 0..(rows.size + 1)) {
+            guidelines.add(createGuidelineFromTop(step * i))
+        }
+
+        rows.forEachIndexed { index, row ->
+            val topAnchor = guidelines[index]
+            val bottomAnchor = guidelines[index + 1]
+
+            val refs = arrayListOf<ConstrainedLayoutReference>()
+
+            row.forEach { key ->
+                val ref = createRef().also { refs.add(it) }
+                Key(key, onKeyClicked, Modifier
+                    .defaultMinSize(10.dp)
+                    .padding(3.dp)
+                    .constrainAs(ref) {
+                        linkTo(topAnchor, bottomAnchor)
+                        horizontalChainWeight = if(key is Key.CharKey) 1f else 1.5f
+                        width = Dimension.ratio(key.aspectRatio)
+                        height = Dimension.fillToConstraints
+                    }
+                )
+            }
+
+            //TODO - Should we just have a normal array?
+            createHorizontalChain(*refs.toTypedArray(), chainStyle = ChainStyle.Packed)
         }
     }
 }
 
 @Composable
-private fun Key(
-    key: Key,
-    onKeyClicked: (key: Key) -> Unit,
-    modifier: Modifier = Modifier
-) {
+private fun Key(key: Key, onKeyClicked: (key: Key) -> Unit, modifier: Modifier = Modifier) {
     when (key) {
         is Key.CharKey -> CharKey(key, onKeyClicked, modifier)
         is Key.IconKey -> IconKey(key, onKeyClicked, modifier)
-        is Key.StringKey -> StringKey(key, onKeyClicked, modifier)
     }
 }
 
@@ -118,16 +125,7 @@ private fun CharKey(
     onKeyClicked: (key: Key) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    TextKey(key, onKeyClicked, modifier.aspectRatio(key.aspectRatio, true))
-}
-
-@Composable
-private fun StringKey(
-    key: Key.StringKey,
-    onKeyClicked: (key: Key) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    TextKey(key, onKeyClicked, modifier.aspectRatio(key.aspectRatio, true))
+    TextKey(key, onKeyClicked, modifier)
 }
 
 @Composable
@@ -136,7 +134,7 @@ private fun IconKey(
     onKeyClicked: (key: Key) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    BaseKey(key, onKeyClicked, modifier.aspectRatio(key.aspectRatio, true)) {
+    BaseKey(key, onKeyClicked, modifier) {
         Icon(key.icon, "", tint = Color.White, modifier = Modifier.padding(16.dp))
     }
 }
@@ -158,7 +156,7 @@ private fun BaseKey(
 
 @Composable
 private fun TextKey(
-    key: Key.TextKey,
+    key: Key.CharKey,
     onKeyClicked: (key: Key) -> Unit,
     modifier: Modifier = Modifier,
     scaleFactor: Float = .8f
@@ -170,7 +168,7 @@ private fun TextKey(
                 dimension.toSp() * scaleFactor
             }
             Text(
-                text = key.text,
+                text = key.char.toString(),
                 color = Color.White,
                 fontSize = fontSize,
                 maxLines = 1,
@@ -180,7 +178,6 @@ private fun TextKey(
     }
 }
 
-
 @Preview
 @Composable
 private fun PreviewCharKey() {
@@ -189,15 +186,9 @@ private fun PreviewCharKey() {
 
 @Preview
 @Composable
-private fun PreviewStringKey() {
-    Key(key = Key.StringKey("ENTER"), modifier = Modifier.height(58.dp), onKeyClicked = { })
-}
-
-@Preview
-@Composable
 private fun PreviewIconKey() {
     Key(
-        key = Key.IconKey(Icons.Default.KeyboardBackspace),
+        key = Key.SUBMIT,
         modifier = Modifier.height(58.dp),
         onKeyClicked = { })
 }
@@ -205,7 +196,9 @@ private fun PreviewIconKey() {
 @Preview
 @Composable
 private fun PreviewKeyboard() {
-    Keyboard({
-
-    }, modifier = Modifier.height(150.dp))
+    Keyboard(
+        {}, modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+    )
 }
