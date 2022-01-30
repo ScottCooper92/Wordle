@@ -1,6 +1,8 @@
-package com.cooper.wordle.app.data
+package com.cooper.wordle.game
 
-import com.cooper.wordle.app.ui.game.*
+import com.cooper.wordle.game.EvaluatedLetterState.*
+import com.cooper.wordle.game.data.Letters
+import com.cooper.wordle.game.data.WordStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import timber.log.Timber
@@ -12,16 +14,17 @@ class InvalidGuess(override val message: String) : Throwable()
 class IncorrectGuess(override val message: String) : Throwable()
 
 @Singleton
-class GameManager @Inject constructor(private val wordStore: WordStore) {
+class GameManager @Inject internal constructor(private val wordStore: WordStore) {
 
     private val _state: MutableStateFlow<GameState> = MutableStateFlow(GameState.Uninitialised)
     val state: StateFlow<GameState>
         get() = _state
 
-    suspend fun newGame(letters: WordStore.Letters) {
+    suspend fun newGame(letters: Letters) {
         val word = wordStore.randomWord(letters)
         val state = GameState.InProgress(
             solution = word,
+            usedLetters = emptySet(),
             gridState = GridState.empty(
                 height = MAX_GUESSES,
                 length = word.length,
@@ -39,16 +42,17 @@ class GameManager @Inject constructor(private val wordStore: WordStore) {
         val gridState = currentState.gridState
         val row = gridState.getRow(currentState.rowIndex)
 
+        // check if we have space left to add a new character
         if (!row.hasSpace) {
             Timber.d("Word is full")
             return
         }
 
         // add the tile by replacing the first empty tile
-        val newTile = TileState.Foo(char)
+        val newTile = ProspectiveLetter(char)
         val updatedRow = row.copy(
             tileStates = row.tileStates.toMutableList().apply {
-                val index = indexOfFirst { it is TileState.Empty }
+                val index = indexOfFirst { it is EmptyLetter }
                 set(index, newTile)
             }
         )
@@ -77,8 +81,8 @@ class GameManager @Inject constructor(private val wordStore: WordStore) {
         // add the tile by replacing the first empty tile
         val updatedRow = row.copy(
             tileStates = row.tileStates.toMutableList().apply {
-                val index = indexOfLast { it is TileState.Foo }
-                set(index, TileState.Empty)
+                val index = indexOfLast { it is ProspectiveLetter }
+                set(index, EmptyLetter)
             }
         )
 
@@ -99,23 +103,26 @@ class GameManager @Inject constructor(private val wordStore: WordStore) {
         val row = gridState.getRow(currentState.rowIndex)
 
         // evaluate the guess
-        val updatedRow = evaluateGuess(row, currentState.solution)
-        val updatedGrid = updateGridState(updatedRow)
+        val evaluatedLetters = evaluateGuess(row, currentState.solution)
+        val evaluatedRow = GridRow(evaluatedLetters)
+        val updatedGrid = updateGridState(evaluatedRow)
+        val updatedLetters = updateEvaluatedLetters(currentState.usedLetters, evaluatedLetters)
 
         val nextIndex = currentState.rowIndex + 1
         val updatedState: GameState = when {
-            updatedRow.isCorrect -> {
+            evaluatedRow.isCorrect -> {
                 // the guess is correct update to won state
-                GameState.Won(currentState.solution, updatedGrid)
+                GameState.Won(currentState.solution, updatedLetters, updatedGrid)
             }
             nextIndex >= gridState.height -> {
                 // no guesses left, update to lost state
-                GameState.Lost(currentState.solution, updatedGrid)
+                GameState.Lost(currentState.solution, updatedLetters, updatedGrid)
             }
             else -> {
                 // progress to the next guess
                 currentState.copy(
                     gridState = updatedGrid,
+                    usedLetters = updatedLetters,
                     rowIndex = nextIndex
                 )
             }
@@ -127,7 +134,7 @@ class GameManager @Inject constructor(private val wordStore: WordStore) {
     /**
      * TODO
      */
-    private fun updateGridState(updatedRow: Row): GridState {
+    private fun updateGridState(updatedRow: GridRow): GridState {
         val currentState = state.value
         if (currentState !is GameState.InProgress)
             throw GameStateException("Game is not in progress $state")
@@ -143,9 +150,31 @@ class GameManager @Inject constructor(private val wordStore: WordStore) {
     }
 
     /**
+     * Merge the existing evaluated letters with the new letters.
+     * Existing letters will be overridden if the new [EvaluatedLetterState.value] is greater than
+     * the existing value.
+     *
+     * Values are as follows
+     * Correct > Present > Absent
+     */
+    private fun updateEvaluatedLetters(
+        existingLetters: Set<EvaluatedLetterState>,
+        newLetters: List<EvaluatedLetterState>
+    ): Set<EvaluatedLetterState> {
+        val lettersByChar = existingLetters.associateBy { it.char }.toMutableMap()
+        newLetters.forEach { newState ->
+            val existing = lettersByChar.putIfAbsent(newState.char, newState)
+            if (existing != null && newState.value > existing.value) {
+                lettersByChar[newState.char] = newState
+            }
+        }
+        return lettersByChar.values.toSet()
+    }
+
+    /**
      * TODO - Solution POSEY, guess POPPY highlighting both Ps as present
      */
-    private suspend fun evaluateGuess(guess: Row, answer: String): Row {
+    private suspend fun evaluateGuess(guess: GridRow, answer: String): List<EvaluatedLetterState> {
         if (guess.tileStates.size != answer.length)
             throw IllegalArgumentException("Guess isn't the same length as answer. Answer: $answer, Guess: $guess")
 
@@ -163,8 +192,8 @@ class GameManager @Inject constructor(private val wordStore: WordStore) {
             if (correctTile != null) return@mapIndexed correctTile
 
             // check for any occurrences of this char in the answer
-            val fooTile = tileState as TileState.Foo
-            var occurrence = answer.indexOf(fooTile.char, ignoreCase = true)
+            val prospectiveTile = tileState as ProspectiveLetter
+            var occurrence = answer.indexOf(prospectiveTile.char, ignoreCase = true)
             while (occurrence >= 0) {
 
                 // check if the tile at this index is correct as that takes priority
@@ -174,31 +203,34 @@ class GameManager @Inject constructor(private val wordStore: WordStore) {
                     // since we've checked this tile we might as well add it to the result
                     tiles[occurrence] = checkedTile
                     // check for any other occurrences
-                    occurrence = answer.indexOf(fooTile.char, occurrence + 1, true)
+                    occurrence = answer.indexOf(prospectiveTile.char, occurrence + 1, true)
                 } else {
                     // there isn't a better match so this can be considered present
-                    return@mapIndexed TileState.Present(fooTile.char)
+                    return@mapIndexed PresentLetter(prospectiveTile.char)
                 }
             }
 
             // incorrect and not present
-            return@mapIndexed TileState.Absent(fooTile.char)
+            return@mapIndexed AbsentLetter(prospectiveTile.char)
         }
 
-        return Row(result)
+        return result
     }
 
-    private fun isTileCorrect(tile: TileState, char: Char): TileState? {
+    /**
+     * Returns a [CorrectLetter] LetterState if the [tile] matches [char].
+     */
+    private fun isTileCorrect(tile: LetterState, char: Char): EvaluatedLetterState? {
         // check if the tile has already been checked
-        if (tile is TileState.Present || tile is TileState.Correct) {
+        if (tile is PresentLetter || tile is CorrectLetter) {
             Timber.d("Tile $tile already checked")
-            return tile
+            return tile as EvaluatedLetterState
         }
 
-        val fooTile = tile as TileState.Foo
-        return if (fooTile.char.equals(char, true)) {
+        val prospectiveTile = tile as ProspectiveLetter
+        return if (prospectiveTile.char.equals(char, true)) {
             // tile is in the correct location
-            TileState.Correct(tile.char)
+            CorrectLetter(tile.char)
         } else null
     }
 

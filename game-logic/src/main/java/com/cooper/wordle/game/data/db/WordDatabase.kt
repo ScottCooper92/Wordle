@@ -1,4 +1,4 @@
-package com.cooper.wordle.app.data.db
+package com.cooper.wordle.game.data.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase

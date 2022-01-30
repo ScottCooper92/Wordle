@@ -8,19 +8,17 @@ plugins {
 }
 
 android {
-    compileSdk 31
+    compileSdkVersion buildConfig.compileSdk
 
     defaultConfig {
-        applicationId "com.cooper.wordle.app"
-        minSdk 26
-        targetSdk 31
+        applicationId "com.skybet.app"
+        minSdkVersion buildConfig.minSdk
+        targetSdkVersion buildConfig.targetSdk
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables {
-            useSupportLibrary true
-        }
+        vectorDrawables.useSupportLibrary = true
     }
 
     buildTypes {
@@ -51,6 +49,8 @@ android {
 }
 
 dependencies {
+
+    implementation project(":game-logic")
 
     implementation Libs.AndroidX.Constraint.constraintLayout
 
@@ -84,24 +84,10 @@ dependencies {
 
     implementation Libs.AndroidX.Window.window
 
-    implementation Libs.Accompanist.pager
-    implementation Libs.Accompanist.pagerIndicators
     implementation Libs.Accompanist.navigationAnimation
     implementation Libs.Accompanist.navigationMaterial
     implementation Libs.Accompanist.insets
     implementation Libs.Accompanist.insetsUi
 
     implementation Libs.timber
-
-    implementation Libs.Coil.coilCompose
-    implementation Libs.Coil.gif
-    implementation Libs.Coil.video
-
-    implementation Libs.OkHttp.okhttp
-    implementation Libs.OkHttp.logging
-
-    implementation Libs.AndroidX.Room.runtime
-    implementation Libs.AndroidX.Room.ktx
-
-    kapt Libs.AndroidX.Room.compiler
 }

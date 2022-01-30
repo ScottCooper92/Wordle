@@ -13,47 +13,47 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.cooper.wordle.app.R
-import com.cooper.wordle.app.data.TileState
 import com.cooper.wordle.app.ui.components.BottomSheet
-import com.cooper.wordle.app.ui.components.WordRow
+import com.cooper.wordle.app.ui.game.components.WordRow
 import com.cooper.wordle.app.ui.theme.WordleTheme
+import com.cooper.wordle.game.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HelpScreen() {
 
     val correctRow = remember {
-        com.cooper.wordle.app.data.Row(
+        GridRow(
             listOf(
-                TileState.Correct('W'),
-                TileState.Foo('E'),
-                TileState.Foo('A'),
-                TileState.Foo('R'),
-                TileState.Foo('Y'),
+                CorrectLetter('W'),
+                ProspectiveLetter('E'),
+                ProspectiveLetter('A'),
+                ProspectiveLetter('R'),
+                ProspectiveLetter('Y'),
             )
         )
     }
 
     val presentRow = remember {
-        com.cooper.wordle.app.data.Row(
+        GridRow(
             listOf(
-                TileState.Foo('P'),
-                TileState.Present('I'),
-                TileState.Foo('L'),
-                TileState.Foo('L'),
-                TileState.Foo('S'),
+                ProspectiveLetter('P'),
+                PresentLetter('I'),
+                ProspectiveLetter('L'),
+                ProspectiveLetter('L'),
+                ProspectiveLetter('S'),
             )
         )
     }
 
     val absentRow = remember {
-        com.cooper.wordle.app.data.Row(
+        GridRow(
             listOf(
-                TileState.Foo('V'),
-                TileState.Foo('A'),
-                TileState.Foo('G'),
-                TileState.Absent('U'),
-                TileState.Foo('E'),
+                ProspectiveLetter('V'),
+                ProspectiveLetter('A'),
+                ProspectiveLetter('G'),
+                AbsentLetter('U'),
+                ProspectiveLetter('E'),
             )
         )
     }

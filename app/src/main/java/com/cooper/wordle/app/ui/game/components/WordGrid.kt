@@ -1,4 +1,4 @@
-package com.cooper.wordle.app.ui.components
+package com.cooper.wordle.app.ui.game.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.padding
@@ -7,7 +7,7 @@ import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.cooper.wordle.app.data.GridState
+import com.cooper.wordle.game.GridState
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

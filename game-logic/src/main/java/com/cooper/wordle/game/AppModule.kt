@@ -1,9 +1,9 @@
-package com.cooper.wordle.app
+package com.cooper.wordle.game
 
 import android.content.Context
 import androidx.room.Room
-import com.cooper.wordle.app.data.db.WordDao
-import com.cooper.wordle.app.data.db.WordDatabase
+import com.cooper.wordle.game.data.db.WordDao
+import com.cooper.wordle.game.data.db.WordDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,8 +13,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object AppModule {
-
+internal object GameModule {
 
     @Provides
     @Singleton

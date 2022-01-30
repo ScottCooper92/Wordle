@@ -1,4 +1,4 @@
-package com.cooper.wordle.app.ui.components
+package com.cooper.wordle.app.ui.game.components
 
 import android.content.res.Configuration
 import android.graphics.Typeface
@@ -18,20 +18,21 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.cooper.wordle.app.data.TileState
 import com.cooper.wordle.app.ui.theme.WordleTheme
+import com.cooper.wordle.game.*
 
 @Composable
 fun LetterTile(
-    tileState: TileState,
+    tileState: LetterState,
     modifier: Modifier = Modifier
 ) {
+    val style = LetterStyleHelper.getTileStyle(tileState)
     Surface(
-        color = tileState.tileBackground,
+        color = style.background,
         modifier = modifier
             .fillMaxSize()
             .aspectRatio(1f)
-            .border(2.dp, tileState.tileBorder)
+            .border(2.dp, style.border)
     ) {
 
         val color = LocalContentColor.current
@@ -64,19 +65,19 @@ fun LetterTile(
 fun PreviewEmptyTile() {
     WordleTheme {
         LetterTile(
-            tileState = TileState.Empty,
+            tileState = EmptyLetter,
             modifier = Modifier.size(128.dp)
         )
     }
 }
 
-@Preview(name = "foo tile")
-@Preview(name = "foo tile dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(name = "prospective tile")
+@Preview(name = "prospective tile dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun PreviewFooTile() {
+fun PreviewProspectiveTile() {
     WordleTheme {
         LetterTile(
-            tileState = TileState.Foo('A'),
+            tileState = ProspectiveLetter('A'),
             modifier = Modifier.size(128.dp)
         )
     }
@@ -88,7 +89,7 @@ fun PreviewFooTile() {
 fun PreviewAbsentTile() {
     WordleTheme {
         LetterTile(
-            tileState = TileState.Absent('A'),
+            tileState = AbsentLetter('A'),
             modifier = Modifier.size(128.dp)
         )
     }
@@ -100,7 +101,7 @@ fun PreviewAbsentTile() {
 fun PreviewPresentTile() {
     WordleTheme {
         LetterTile(
-            tileState = TileState.Present('A'),
+            tileState = PresentLetter('A'),
             modifier = Modifier.size(128.dp)
         )
     }
@@ -116,7 +117,7 @@ fun PreviewPresentTile() {
 fun PreviewCorrectTile() {
     WordleTheme {
         LetterTile(
-            tileState = TileState.Correct('A'),
+            tileState = CorrectLetter('A'),
             modifier = Modifier.size(128.dp)
         )
     }

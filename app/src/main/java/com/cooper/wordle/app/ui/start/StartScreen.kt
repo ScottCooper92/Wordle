@@ -14,15 +14,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.cooper.wordle.app.R
-import com.cooper.wordle.app.data.WordStore
 import com.cooper.wordle.app.ui.components.AppBarAction
 import com.cooper.wordle.app.ui.components.WordleAppBar
 import com.cooper.wordle.app.ui.theme.WordleTheme
+import com.cooper.wordle.game.data.Letters
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StartScreen(
-    onLettersPicked: (letters: WordStore.Letters) -> Unit,
+    onLettersPicked: (letters: Letters) -> Unit,
     onHelpClicked: () -> Unit
 ) {
     Scaffold(
@@ -51,7 +51,7 @@ fun StartScreen(
 
             Spacer(modifier = Modifier.height(64.dp))
 
-            WordStore.Letters.values().forEach { letters ->
+            Letters.values().forEach { letters ->
                 Button(onClick = { onLettersPicked(letters) }) {
                     Text(text = stringResource(id = R.string.letter_select_button, letters.size))
                 }

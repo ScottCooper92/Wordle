@@ -1,6 +1,6 @@
 package com.cooper.wordle.app.interactor
 
-import com.cooper.wordle.app.data.GameManager
+import com.cooper.wordle.game.GameManager
 import javax.inject.Inject
 
 class AddLetter @Inject constructor(

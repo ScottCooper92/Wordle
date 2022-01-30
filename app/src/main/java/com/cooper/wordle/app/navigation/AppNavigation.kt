@@ -7,10 +7,10 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.cooper.wordle.app.data.WordStore
 import com.cooper.wordle.app.ui.game.GameScreen
 import com.cooper.wordle.app.ui.help.HelpScreen
 import com.cooper.wordle.app.ui.start.StartScreen
+import com.cooper.wordle.game.data.Letters
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.navigation.material.bottomSheet
 
@@ -18,7 +18,7 @@ private sealed class Screen(val route: String) {
 
     object Start : Screen("start")
     object Game : Screen("game/{letters}") {
-        fun createRoute(letters: WordStore.Letters): String {
+        fun createRoute(letters: Letters): String {
             return "game/$letters"
         }
     }
@@ -54,7 +54,7 @@ internal fun AppNavigation(
         composable(
             route = Screen.Game.route,
             arguments = listOf(
-                navArgument("letters") { type = NavType.EnumType(WordStore.Letters::class.java) }
+                navArgument("letters") { type = NavType.EnumType(Letters::class.java) }
             )
         ) {
             GameScreen(

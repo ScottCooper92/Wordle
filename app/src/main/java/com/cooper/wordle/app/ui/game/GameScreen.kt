@@ -16,12 +16,13 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintLayoutScope
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.cooper.wordle.app.data.GridState
-import com.cooper.wordle.app.data.Row
-import com.cooper.wordle.app.data.TileState
-import com.cooper.wordle.app.ui.components.*
+import com.cooper.wordle.app.ui.components.AppBarAction
+import com.cooper.wordle.app.ui.components.WordleAppBar
+import com.cooper.wordle.app.ui.game.components.Key
+import com.cooper.wordle.app.ui.game.components.Keyboard
+import com.cooper.wordle.app.ui.game.components.WordGrid
 import com.cooper.wordle.app.ui.theme.WordleTheme
-import com.google.accompanist.pager.ExperimentalPagerApi
+import com.cooper.wordle.game.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
@@ -51,7 +52,6 @@ fun GameScreen(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterialApi::class,
     ExperimentalFoundationApi::class,
-    ExperimentalPagerApi::class
 )
 @Composable
 private fun GameScreen(
@@ -88,7 +88,11 @@ private fun GameScreen(
         ConstraintLayout(modifier = Modifier.fillMaxSize()) {
             when (state) {
                 GameViewState.Loading -> Loading()
-                is GameViewState.InProgress -> GameBoard(state.gridState, onKeyClicked)
+                is GameViewState.InProgress -> GameBoard(
+                    gridState = state.gridState,
+                    usedLetters = state.usedLetters,
+                    onKeyClicked = onKeyClicked
+                )
             }
         }
     }
@@ -109,6 +113,7 @@ private fun ConstraintLayoutScope.Loading() {
 @Composable
 private fun ConstraintLayoutScope.GameBoard(
     gridState: GridState,
+    usedLetters: Set<EvaluatedLetterState>,
     onKeyClicked: (key: Key) -> Unit
 ) {
     // Create references for the composables to constrain
@@ -144,6 +149,7 @@ private fun ConstraintLayoutScope.GameBoard(
     )
 
     Keyboard(
+        usedLetters = usedLetters,
         onKeyClicked = onKeyClicked,
         modifier = Modifier
             .constrainAs(keyboard) {
@@ -164,10 +170,11 @@ private fun ConstraintLayoutScope.GameBoard(
 @Preview(name = "empty grid length 4")
 @Composable
 private fun PreviewEmptyGameScreen(wordSize: Int = 4) {
-    val emptyRow = Row(List(wordSize) { TileState.Empty })
+    val emptyRow = GridRow(List(wordSize) { EmptyLetter })
     val state = GameViewState.InProgress(
         solution = "Answer",
-        gridState = GridState(6, wordSize, List(6) { emptyRow })
+        gridState = GridState(6, wordSize, List(6) { emptyRow }),
+        usedLetters = emptySet()
     )
     WordleTheme {
         GameScreen(
@@ -203,38 +210,39 @@ private fun PreviewEmptyGameScreenSize7() {
 @Preview(name = "dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun PreviewGameScreen() {
-    val first = Row(
+    val first = GridRow(
         listOf(
-            TileState.Absent('P'),
-            TileState.Present('A'),
-            TileState.Present('R'),
-            TileState.Correct('T'),
-            TileState.Absent('Y'),
+            AbsentLetter('P'),
+            PresentLetter('A'),
+            PresentLetter('R'),
+            CorrectLetter('T'),
+            AbsentLetter('Y'),
         )
     )
 
-    val second = Row(
+    val second = GridRow(
         listOf(
-            TileState.Foo('P'),
-            TileState.Foo('A'),
-            TileState.Empty,
-            TileState.Empty,
-            TileState.Empty,
+            ProspectiveLetter('P'),
+            ProspectiveLetter('A'),
+            EmptyLetter,
+            EmptyLetter,
+            EmptyLetter,
         )
     )
-    val third = Row(
+    val third = GridRow(
         listOf(
-            TileState.Empty,
-            TileState.Empty,
-            TileState.Empty,
-            TileState.Empty,
-            TileState.Empty
+            EmptyLetter,
+            EmptyLetter,
+            EmptyLetter,
+            EmptyLetter,
+            EmptyLetter
         )
     )
 
     val state = GameViewState.InProgress(
         solution = "Answer",
-        gridState = GridState(6, 5, listOf(first, second, third, third, third, third))
+        gridState = GridState(6, 5, listOf(first, second, third, third, third, third)),
+        usedLetters = emptySet()
     )
     WordleTheme {
         GameScreen(

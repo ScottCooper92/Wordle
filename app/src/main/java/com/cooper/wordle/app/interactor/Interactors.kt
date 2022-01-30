@@ -41,7 +41,7 @@ abstract class Interactor<in P> {
  * Interactor that returns results using [Flow].
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-abstract class FlowInteractor<P : Any, T> {
+abstract class FlowInteractor<P : Any?, T> {
 
     private val paramState = MutableSharedFlow<P>(
         replay = 1,

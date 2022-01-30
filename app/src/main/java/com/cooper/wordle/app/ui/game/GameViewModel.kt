@@ -4,11 +4,15 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cooper.wordle.app.data.*
 import com.cooper.wordle.app.interactor.*
 import com.cooper.wordle.app.ui.common.SnackbarManager
 import com.cooper.wordle.app.ui.common.UiMessage
-import com.cooper.wordle.app.ui.components.Key
+import com.cooper.wordle.app.ui.game.components.Key
+import com.cooper.wordle.game.EvaluatedLetterState
+import com.cooper.wordle.game.GridState
+import com.cooper.wordle.game.IncorrectGuess
+import com.cooper.wordle.game.InvalidGuess
+import com.cooper.wordle.game.data.Letters
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -20,6 +24,7 @@ sealed class GameViewState {
 
     data class InProgress(
         val solution: String,
+        val usedLetters: Set<EvaluatedLetterState>,
         val gridState: GridState
     ) : GameViewState()
 }
@@ -40,15 +45,8 @@ class GameViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val wordLength = savedStateHandle.get<WordStore.Letters>("letters")!!
-    val state: StateFlow<GameViewState> = observeGameState.flow.mapLatest {
-        when (it) {
-            GameState.Uninitialised -> GameViewState.Loading
-            is GameState.InProgress -> GameViewState.InProgress(it.solution, it.gridState)
-            is GameState.Won -> GameViewState.InProgress(it.solution, it.gridState)
-            is GameState.Lost -> GameViewState.InProgress(it.solution, it.gridState)
-        }
-    }.stateIn(
+    private val wordLength = savedStateHandle.get<Letters>("letters")!!
+    val state: StateFlow<GameViewState> = observeGameState.flow.stateIn(
         viewModelScope,
         SharingStarted.Eagerly,
         GameViewState.Loading
@@ -60,7 +58,7 @@ class GameViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            observeGameState(ObserveGameState.Params())
+            observeGameState(null)
         }
         viewModelScope.launch {
             startGame.executeSync(StartGame.Params(wordLength))
@@ -91,7 +89,7 @@ class GameViewModel @Inject constructor(
 
     private fun onIconKeyClicked(key: Key.IconKey) {
         viewModelScope.launch {
-            when(key){
+            when (key) {
                 Key.DELETE -> removeLetter.executeSync(Unit)
                 Key.SUBMIT -> evaluateWord()
             }

@@ -1,4 +1,4 @@
-package com.cooper.wordle.app.ui.components
+package com.cooper.wordle.app.ui.game.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -24,6 +24,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintLayoutBaseScope.HorizontalAnchor
 import androidx.constraintlayout.compose.Dimension
 import com.cooper.wordle.app.ui.theme.KeyBackground
+import com.cooper.wordle.game.EvaluatedLetterState
 
 sealed class Key(val aspectRatio: String = "7:12") {
     sealed class IconKey(val icon: ImageVector) : Key(aspectRatio = "1:1.13")
@@ -74,6 +75,7 @@ private val rows = listOf(firstRow, secondRow, thirdRow)
 
 @Composable
 fun Keyboard(
+    usedLetters: Set<EvaluatedLetterState>,
     onKeyClicked: (key: Key) -> Unit,
     modifier: Modifier
 ) {
@@ -93,12 +95,20 @@ fun Keyboard(
 
             row.forEach { key ->
                 val ref = createRef().also { refs.add(it) }
-                Key(key, onKeyClicked, Modifier
+
+                // change the color of the background if this letter has been used
+                var backgroundColor = KeyBackground
+                if (key is Key.CharKey) {
+                    val letterState = usedLetters.firstOrNull { it.char == key.char }
+                    backgroundColor = LetterStyleHelper.getKeyStyle(letterState).background
+                }
+
+                Key(key, backgroundColor, onKeyClicked, Modifier
                     .defaultMinSize(10.dp)
                     .padding(3.dp)
                     .constrainAs(ref) {
                         linkTo(topAnchor, bottomAnchor)
-                        horizontalChainWeight = if(key is Key.CharKey) 1f else 1.5f
+                        horizontalChainWeight = if (key is Key.CharKey) 1f else 1.5f
                         width = Dimension.ratio(key.aspectRatio)
                         height = Dimension.fillToConstraints
                     }
@@ -112,29 +122,36 @@ fun Keyboard(
 }
 
 @Composable
-private fun Key(key: Key, onKeyClicked: (key: Key) -> Unit, modifier: Modifier = Modifier) {
+private fun Key(
+    key: Key,
+    color: Color,
+    onKeyClicked: (key: Key) -> Unit,
+    modifier: Modifier = Modifier
+) {
     when (key) {
-        is Key.CharKey -> CharKey(key, onKeyClicked, modifier)
-        is Key.IconKey -> IconKey(key, onKeyClicked, modifier)
+        is Key.CharKey -> CharKey(key, color, onKeyClicked, modifier)
+        is Key.IconKey -> IconKey(key, color, onKeyClicked, modifier)
     }
 }
 
 @Composable
 private fun CharKey(
     key: Key.CharKey,
+    color: Color,
     onKeyClicked: (key: Key) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    TextKey(key, onKeyClicked, modifier)
+    TextKey(key, color, onKeyClicked, modifier)
 }
 
 @Composable
 private fun IconKey(
     key: Key.IconKey,
+    color: Color,
     onKeyClicked: (key: Key) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    BaseKey(key, onKeyClicked, modifier) {
+    BaseKey(key, color, onKeyClicked, modifier) {
         Icon(key.icon, "", tint = Color.White, modifier = Modifier.padding(16.dp))
     }
 }
@@ -142,12 +159,13 @@ private fun IconKey(
 @Composable
 private fun BaseKey(
     key: Key,
+    color: Color,
     onKeyClicked: (key: Key) -> Unit,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
     Surface(
-        color = KeyBackground,
+        color = color,
         shape = RoundedCornerShape(8.dp),
         modifier = modifier.clickable { onKeyClicked(key) },
         content = content
@@ -157,11 +175,12 @@ private fun BaseKey(
 @Composable
 private fun TextKey(
     key: Key.CharKey,
+    color: Color,
     onKeyClicked: (key: Key) -> Unit,
     modifier: Modifier = Modifier,
     scaleFactor: Float = .8f
 ) {
-    BaseKey(key, onKeyClicked, modifier) {
+    BaseKey(key, color, onKeyClicked, modifier) {
         BoxWithConstraints(contentAlignment = Alignment.Center, modifier = Modifier.padding(8.dp)) {
             val fontSize = with(LocalDensity.current) {
                 val dimension = if (maxHeight > maxWidth) maxWidth else maxHeight
@@ -181,7 +200,11 @@ private fun TextKey(
 @Preview
 @Composable
 private fun PreviewCharKey() {
-    Key(key = Key.CharKey('A'), modifier = Modifier.height(58.dp), onKeyClicked = { })
+    Key(
+        key = Key.CharKey('A'),
+        color = KeyBackground,
+        modifier = Modifier.height(58.dp),
+        onKeyClicked = { })
 }
 
 @Preview
@@ -189,6 +212,7 @@ private fun PreviewCharKey() {
 private fun PreviewIconKey() {
     Key(
         key = Key.SUBMIT,
+        color = KeyBackground,
         modifier = Modifier.height(58.dp),
         onKeyClicked = { })
 }
@@ -197,7 +221,9 @@ private fun PreviewIconKey() {
 @Composable
 private fun PreviewKeyboard() {
     Keyboard(
-        {}, modifier = Modifier
+        usedLetters = emptySet(),
+        onKeyClicked = {},
+        modifier = Modifier
             .fillMaxWidth()
             .height(200.dp)
     )

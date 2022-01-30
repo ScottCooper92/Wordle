@@ -7,3 +7,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "Wordle"
 include ':app'
+include ':game-logic'
