@@ -11,7 +11,7 @@ import javax.inject.Singleton
 
 class GameStateException(override val message: String) : Throwable()
 class InvalidGuess(override val message: String) : Throwable()
-class IncorrectGuess(override val message: String) : Throwable()
+class IncorrectGuess(override val message: String) : Throwable() //TODO - Should this also be invalid?
 
 @Singleton
 class GameManager @Inject internal constructor(private val wordStore: WordStore) {
@@ -20,6 +20,12 @@ class GameManager @Inject internal constructor(private val wordStore: WordStore)
     val state: StateFlow<GameState>
         get() = _state
 
+    /**
+     * Starts a new game by selecting a word of size n, where n is the value of [letters].
+     * Observe [GameManager.state] to receive updates to the state of the game.
+     *
+     * @param letters - The number of letters the answer will consist of.
+     */
     suspend fun newGame(letters: Letters) {
         val word = wordStore.randomWord(letters)
         val state = GameState.InProgress(
@@ -34,6 +40,12 @@ class GameManager @Inject internal constructor(private val wordStore: WordStore)
         _state.emit(state)
     }
 
+    /**
+     * Adds a letter to the current row.
+     *
+     * @param char - The letter to be added
+     * @throws GameStateException If a game is not currently in progress.
+     */
     suspend fun addLetter(char: Char) {
         val currentState = state.value
         if (currentState !is GameState.InProgress)
@@ -65,6 +77,11 @@ class GameManager @Inject internal constructor(private val wordStore: WordStore)
         _state.emit(updatedState)
     }
 
+    /**
+     * Removes the last added letter from the current row.
+     *
+     * @throws GameStateException If a game is not currently in progress.
+     */
     suspend fun removeLetter() {
         val currentState = state.value
         if (currentState !is GameState.InProgress)
@@ -94,6 +111,13 @@ class GameManager @Inject internal constructor(private val wordStore: WordStore)
         _state.emit(updatedState)
     }
 
+    /**
+     * Evaluates the current row of letters by comparing them against the answer.
+     *
+     * @@throws GameStateException If a game is not currently in progress.
+     * @throws InvalidGuess If the row is incomplete
+     * @throws IncorrectGuess If the word entered is not a valid word.
+     */
     suspend fun evaluateCurrentRow() {
         val currentState = state.value
         if (currentState !is GameState.InProgress)
@@ -132,7 +156,8 @@ class GameManager @Inject internal constructor(private val wordStore: WordStore)
     }
 
     /**
-     * TODO
+     * Updates the current value of [GridState] by replacing the current row with [updatedRow]
+     * Current row is controlled by GridState.
      */
     private fun updateGridState(updatedRow: GridRow): GridState {
         val currentState = state.value
@@ -155,7 +180,10 @@ class GameManager @Inject internal constructor(private val wordStore: WordStore)
      * the existing value.
      *
      * Values are as follows
-     * Correct > Present > Absent
+     * [CorrectLetter] > [PresentLetter] > [AbsentLetter]
+     *
+     * This allows us to "upgrade" a [PresentLetter] with a [CorrectLetter] when the correct location
+     * has been found.
      */
     private fun updateEvaluatedLetters(
         existingLetters: Set<EvaluatedLetterState>,
@@ -172,6 +200,13 @@ class GameManager @Inject internal constructor(private val wordStore: WordStore)
     }
 
     /**
+     * Evaluates [guess] by comparing it to the actual answer.
+     *
+     * The response will be the same [LetterState]'s in the same order but mapped to an appropriate
+     * [EvaluatedLetterState] based on whether the letter was:
+     *  - missing from the answer = [AbsentLetter]
+     *  - present in the answer but in the wrong location = [PresentLetter]
+     *  - present in the answer and in the correct location = [CorrectLetter]
      * TODO - Solution POSEY, guess POPPY highlighting both Ps as present
      */
     private suspend fun evaluateGuess(guess: GridRow, answer: String): List<EvaluatedLetterState> {
@@ -185,7 +220,7 @@ class GameManager @Inject internal constructor(private val wordStore: WordStore)
             throw IncorrectGuess("Not a word")
 
         val tiles = guess.tileStates.toMutableList()
-        val result = tiles.mapIndexed { index, tileState ->
+        return tiles.mapIndexed { index, tileState ->
 
             // check if this tile is correct
             val correctTile = isTileCorrect(tileState, answer[index])
@@ -213,8 +248,6 @@ class GameManager @Inject internal constructor(private val wordStore: WordStore)
             // incorrect and not present
             return@mapIndexed AbsentLetter(prospectiveTile.char)
         }
-
-        return result
     }
 
     /**

@@ -115,7 +115,6 @@ fun Keyboard(
                 )
             }
 
-            //TODO - Should we just have a normal array?
             createHorizontalChain(*refs.toTypedArray(), chainStyle = ChainStyle.Packed)
         }
     }
